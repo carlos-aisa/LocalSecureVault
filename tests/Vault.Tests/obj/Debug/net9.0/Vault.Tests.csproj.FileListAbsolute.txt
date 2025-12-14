@@ -106,3 +106,4 @@ D:\Programacion\LocalSecureVault\tests\Vault.Tests\obj\Debug\net9.0\refint\Vault
 D:\Programacion\LocalSecureVault\tests\Vault.Tests\obj\Debug\net9.0\Vault.Tests.pdb
 D:\Programacion\LocalSecureVault\tests\Vault.Tests\obj\Debug\net9.0\Vault.Tests.genruntimeconfig.cache
 D:\Programacion\LocalSecureVault\tests\Vault.Tests\obj\Debug\net9.0\ref\Vault.Tests.dll
+D:\Programacion\LocalSecureVault\tests\Vault.Tests\obj\Debug\net9.0\Vault.Tests.sourcelink.json

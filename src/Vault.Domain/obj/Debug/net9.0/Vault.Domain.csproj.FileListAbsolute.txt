@@ -9,3 +9,4 @@ D:\Programacion\LocalSecureVault\src\Vault.Domain\obj\Debug\net9.0\Vault.Domain.
 D:\Programacion\LocalSecureVault\src\Vault.Domain\obj\Debug\net9.0\refint\Vault.Domain.dll
 D:\Programacion\LocalSecureVault\src\Vault.Domain\obj\Debug\net9.0\Vault.Domain.pdb
 D:\Programacion\LocalSecureVault\src\Vault.Domain\obj\Debug\net9.0\ref\Vault.Domain.dll
+D:\Programacion\LocalSecureVault\src\Vault.Domain\obj\Debug\net9.0\Vault.Domain.sourcelink.json

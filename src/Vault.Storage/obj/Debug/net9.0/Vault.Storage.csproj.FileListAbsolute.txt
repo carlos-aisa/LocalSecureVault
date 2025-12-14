@@ -15,3 +15,4 @@ D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storag
 D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\refint\Vault.Storage.dll
 D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.pdb
 D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\ref\Vault.Storage.dll
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.sourcelink.json

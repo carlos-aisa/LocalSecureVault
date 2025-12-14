@@ -13,3 +13,4 @@ D:\Programacion\LocalSecureVault\src\Vault.Application\obj\Debug\net9.0\Vault.Ap
 D:\Programacion\LocalSecureVault\src\Vault.Application\obj\Debug\net9.0\refint\Vault.Application.dll
 D:\Programacion\LocalSecureVault\src\Vault.Application\obj\Debug\net9.0\Vault.Application.pdb
 D:\Programacion\LocalSecureVault\src\Vault.Application\obj\Debug\net9.0\ref\Vault.Application.dll
+D:\Programacion\LocalSecureVault\src\Vault.Application\obj\Debug\net9.0\Vault.Application.sourcelink.json

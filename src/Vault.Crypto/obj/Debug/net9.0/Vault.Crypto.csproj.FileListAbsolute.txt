@@ -15,3 +15,4 @@ D:\Programacion\LocalSecureVault\src\Vault.Crypto\obj\Debug\net9.0\Vault.Crypto.
 D:\Programacion\LocalSecureVault\src\Vault.Crypto\obj\Debug\net9.0\refint\Vault.Crypto.dll
 D:\Programacion\LocalSecureVault\src\Vault.Crypto\obj\Debug\net9.0\Vault.Crypto.pdb
 D:\Programacion\LocalSecureVault\src\Vault.Crypto\obj\Debug\net9.0\ref\Vault.Crypto.dll
+D:\Programacion\LocalSecureVault\src\Vault.Crypto\obj\Debug\net9.0\Vault.Crypto.sourcelink.json

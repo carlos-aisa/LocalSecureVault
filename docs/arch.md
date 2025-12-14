@@ -9,16 +9,19 @@ Está pensado para poder seguir el proyecto paso a paso, incluso sin experiencia
 ## 1. Principios de diseño
 
 ### 1.1 Seguridad primero
+
 - Todos los datos se almacenan cifrados
 - La master password nunca se guarda
 - La integridad de los datos debe poder verificarse
 - El fichero debe ser inútil para un atacante sin la contraseña
 
 ### 1.2 Portabilidad
+
 - La bóveda debe poder restaurarse en otro equipo
 - No se depende de claves ligadas al sistema por defecto (DPAPI opcional)
 
 ### 1.3 Separación de responsabilidades
+
 - La UI nunca toca criptografía directamente
 - El cifrado y almacenamiento están aislados
 - El dominio es independiente de infraestructura
@@ -33,21 +36,20 @@ El proyecto sigue una arquitectura en capas inspirada en Clean Architecture.
 
 LocalSecureVault.sln
 │
-├── Vault.Domain
-│ └── Entidades y reglas de negocio
+|-- Vault.Domain
+│ |- Entidades y reglas de negocio
 │
-├── Vault.Application
-│ └── Casos de uso y lógica de aplicación
+|-- Vault.Application
+│ |- Casos de uso y lógica de aplicación
 │
-├── Vault.Crypto
-│ └── Criptografía (Argon2id + AES-GCM)
+|-- Vault.Crypto
+│ |- Criptografía (Argon2id + AES-GCM)
 │
-├── Vault.Storage
-│ └── Formato del fichero y acceso a disco
+|-- Vault.Storage
+│ |- Formato del fichero y acceso a disco
 │
-└── Vault.Ui
-└── Blazor Hybrid (MAUI)
-
+|-- Vault.Ui
+│ |- Blazor Hybrid (MAUI)
 
 ---
 
@@ -104,6 +106,7 @@ LocalSecureVault.sln
 ### Header (no secreto, pero protegido)
 
 Incluye:
+
 - Identificador del fichero
 - Versión
 - Parámetros de Argon2id
@@ -145,6 +148,7 @@ Formato JSON (MVP):
 ## 8. Roadmap de implementación
 
 ### Fase 0 – Diseño (actual)
+
 - [x] Decisiones de seguridad
 - [x] Arquitectura definida
 - [x] Documentación inicial
@@ -152,15 +156,17 @@ Formato JSON (MVP):
 ---
 
 ### Fase 1 – Dominio y casos de uso
-- [ ] Entidades del dominio
-- [ ] Validaciones
-- [ ] CRUD de entradas
-- [ ] Búsqueda
-- [ ] Tests de negocio
+
+- [x] Entidades del dominio
+- [x] Validaciones
+- [x] CRUD de entradas
+- [x] Búsqueda
+- [x] Tests de negocio
 
 ---
 
 ### Fase 2 – Criptografía
+
 - [ ] Implementación Argon2id
 - [ ] Implementación AES-GCM
 - [ ] Tests de cifrado/descifrado
@@ -169,6 +175,7 @@ Formato JSON (MVP):
 ---
 
 ### Fase 3 – Almacenamiento
+
 - [ ] Formato del fichero
 - [ ] Escritura atómica
 - [ ] Locks de fichero
@@ -177,12 +184,14 @@ Formato JSON (MVP):
 ---
 
 ### Fase 4 – Servicios sensibles
+
 - [ ] Clipboard con auto-borrado
 - [ ] Auto-lock por inactividad
 
 ---
 
 ### Fase 5 – UI (Blazor Hybrid)
+
 - [ ] Pantalla de unlock
 - [ ] Lista y búsqueda
 - [ ] Edición de entradas
