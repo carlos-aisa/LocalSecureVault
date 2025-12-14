@@ -1,0 +1,17 @@
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Storage.deps.json
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Storage.dll
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Storage.pdb
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Application.dll
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Domain.dll
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Application.pdb
+D:\Programacion\LocalSecureVault\src\Vault.Storage\bin\Debug\net9.0\Vault.Domain.pdb
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.csproj.AssemblyReference.cache
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.GeneratedMSBuildEditorConfig.editorconfig
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.AssemblyInfoInputs.cache
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.AssemblyInfo.cs
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.csproj.CoreCompileInputs.cache
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.St.7FB073A6.Up2Date
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.dll
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\refint\Vault.Storage.dll
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\Vault.Storage.pdb
+D:\Programacion\LocalSecureVault\src\Vault.Storage\obj\Debug\net9.0\ref\Vault.Storage.dll
