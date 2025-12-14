@@ -1,0 +1,67 @@
+# =========================
+# .NET / Visual Studio
+# =========================
+
+## Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+## Rider / ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.DotSettings.user
+
+## Visual Studio
+.vs/
+.vscode/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio cache
+.ipch/
+
+## NuGet
+.nuget/
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.assets.json
+
+## Build artifacts
+*.dll
+*.pdb
+*.exe
+*.app
+*.deps.json
+*.runtimeconfig.json
+
+# =========================
+# MAUI / Blazor Hybrid (future)
+# =========================
+*.apk
+*.aab
+*.ipa
+*.appx
+*.msix
+*.msixbundle
+*.appxbundle
+*.xap
+
+# =========================
+# OS files
+# =========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS

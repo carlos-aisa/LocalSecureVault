@@ -6,7 +6,7 @@ namespace Vault.Application.UseCases;
 public sealed class EntryCommands
 {
     public VaultEntry AddEntry(
-        VaultState state,
+        VaultDocument document,
         string name,
         string password,
         string? username = null,
@@ -15,7 +15,7 @@ public sealed class EntryCommands
         IEnumerable<string>? tags = null,
         DateTimeOffset? nowUtc = null)
     {
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(document);
 
         var entry = VaultEntry.CreateNew(
             name: name,
@@ -26,13 +26,13 @@ public sealed class EntryCommands
             tags: tags,
             nowUtc: nowUtc);
 
-        state.Add(entry);
+        document.AddEntry(entry, nowUtc);
         return entry;
     }
 
     public void UpdateEntry(
-        VaultState state,
-        Guid id,
+        VaultDocument document,
+        Guid entryId,
         string name,
         string password,
         string? username = null,
@@ -41,9 +41,9 @@ public sealed class EntryCommands
         IEnumerable<string>? tags = null,
         DateTimeOffset? nowUtc = null)
     {
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(document);
 
-        var entry = state.GetById(id);
+        var entry = document.GetEntry(entryId);
 
         entry.Update(
             name: name,
@@ -53,11 +53,16 @@ public sealed class EntryCommands
             notes: notes,
             tags: tags,
             nowUtc: nowUtc);
+
+        document.Touch(nowUtc);
     }
 
-    public bool DeleteEntry(VaultState state, Guid id)
+    public bool DeleteEntry(
+        VaultDocument document,
+        Guid entryId,
+        DateTimeOffset? nowUtc = null)
     {
-        ArgumentNullException.ThrowIfNull(state);
-        return state.Remove(id);
+        ArgumentNullException.ThrowIfNull(document);
+        return document.RemoveEntry(entryId, nowUtc);
     }
 }

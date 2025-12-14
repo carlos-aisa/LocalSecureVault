@@ -10,32 +10,33 @@ public class SearchServiceTests
     [Fact]
     public void Search_EmptyQuery_ReturnsAll()
     {
-        var state = new VaultState();
+        var doc = VaultDocument.CreateNew("Vault");
         var uc = new EntryCommands();
-        uc.AddEntry(state, "GitHub", "pw");
-        uc.AddEntry(state, "Google", "pw");
+
+        uc.AddEntry(doc, "GitHub", "pw");
+        uc.AddEntry(doc, "Google", "pw");
 
         var svc = new SearchService();
-        var result = svc.Search(state, new SearchQuery(" "));
+        var result = svc.Search(doc, new SearchQuery(" "));
 
         Assert.Equal(2, result.Count);
     }
 
     [Fact]
-    public void Search_FindsByNameUsernameUrlNotesAndTags()
+    public void Search_FindsByFields()
     {
-        var state = new VaultState();
+        var doc = VaultDocument.CreateNew("Vault");
         var uc = new EntryCommands();
 
-        uc.AddEntry(state, "GitHub", "pw", username: "carlos", url: "https://github.com", notes: "work", tags: new[] { "dev" });
-        uc.AddEntry(state, "Bank", "pw", username: "me", url: "https://bank.local", notes: "money", tags: new[] { "finance" });
+        uc.AddEntry(doc, "GitHub", "pw", username: "carlos", url: "https://github.com", notes: "work", tags: new[] { "dev" });
+        uc.AddEntry(doc, "Bank", "pw", username: "me", url: "https://bank.local", notes: "money", tags: new[] { "finance" });
 
         var svc = new SearchService();
 
-        Assert.Single(svc.Search(state, new SearchQuery("git")));
-        Assert.Single(svc.Search(state, new SearchQuery("CARLOS")));
-        Assert.Single(svc.Search(state, new SearchQuery("bank.local")));
-        Assert.Single(svc.Search(state, new SearchQuery("money")));
-        Assert.Single(svc.Search(state, new SearchQuery("dev")));
+        Assert.Single(svc.Search(doc, new SearchQuery("git")));
+        Assert.Single(svc.Search(doc, new SearchQuery("CARLOS")));
+        Assert.Single(svc.Search(doc, new SearchQuery("bank.local")));
+        Assert.Single(svc.Search(doc, new SearchQuery("money")));
+        Assert.Single(svc.Search(doc, new SearchQuery("dev")));
     }
 }

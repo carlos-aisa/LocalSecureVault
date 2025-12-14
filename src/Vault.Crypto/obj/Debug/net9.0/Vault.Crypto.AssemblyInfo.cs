@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Vault.Crypto")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b8a3c1b045c7f9bc7ee1d927c2710341d0715b4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+378a70f576847bd2044b485573b192ed982673ef")]
 [assembly: System.Reflection.AssemblyProductAttribute("Vault.Crypto")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Vault.Crypto")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
