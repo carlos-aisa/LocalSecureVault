@@ -14,7 +14,7 @@ public sealed class VaultEntry
 
     private readonly List<string> _tags;
 
-    private VaultEntry(
+    internal VaultEntry(
         Guid id,
         string name,
         string password,
@@ -80,6 +80,30 @@ public sealed class VaultEntry
         _tags.AddRange(NormalizeTags(tags));
 
         UpdatedUtc = now;
+    }
+
+    internal static VaultEntry Rehydrate(
+        Guid id,
+        string name,
+        string password,
+        string? username,
+        string? url,
+        string? notes,
+        IEnumerable<string>? tags,
+        DateTimeOffset createdUtc,
+        DateTimeOffset updatedUtc)
+    {
+        // Reuse the same minimal invariants
+        return new VaultEntry(
+            id: id == Guid.Empty ? throw new ArgumentException("Id cannot be empty.", nameof(id)) : id,
+            name: RequireNonEmpty(name, nameof(name)),
+            password: RequireNonEmpty(password, nameof(password)),
+            username: NormalizeOptional(username),
+            url: NormalizeOptional(url),
+            notes: NormalizeOptional(notes),
+            tags: tags,
+            createdUtc: createdUtc,
+            updatedUtc: updatedUtc);
     }
 
     private static string RequireNonEmpty(string value, string paramName)

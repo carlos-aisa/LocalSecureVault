@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Vault.Application\Vault.Application.csproj" />
+    <ProjectReference Include="..\Vault.Domain\Vault.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

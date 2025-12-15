@@ -28,6 +28,14 @@ public sealed class VaultDocument
         return new VaultDocument(meta, new List<VaultEntry>());
     }
 
+    internal static VaultDocument Rehydrate(VaultMetadata meta, IEnumerable<VaultEntry> entries)
+    {
+        ArgumentNullException.ThrowIfNull(meta);
+        ArgumentNullException.ThrowIfNull(entries);
+        return new VaultDocument(meta, entries.ToList());
+    }
+
+
     public void Touch(DateTimeOffset? nowUtc = null)
     {
         var now = nowUtc ?? DateTimeOffset.UtcNow;

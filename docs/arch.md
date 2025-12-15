@@ -167,10 +167,10 @@ Formato JSON (MVP):
 
 ### Fase 2 – Criptografía
 
-- [ ] Implementación Argon2id
-- [ ] Implementación AES-GCM
-- [ ] Tests de cifrado/descifrado
-- [ ] Tests de corrupción
+- [x] Implementación Argon2id
+- [x] Implementación AES-GCM
+- [x] Tests de cifrado/descifrado
+- [x] Tests de corrupción
 
 ---
 
