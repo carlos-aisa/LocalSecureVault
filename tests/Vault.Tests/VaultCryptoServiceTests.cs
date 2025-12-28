@@ -21,10 +21,10 @@ public class VaultCryptoServiceTests
         var password = "super-secret".AsSpan();
 
         var file = service.CreateVault(doc, password, KdfProfile.Interactive);
-        var unlocked = service.UnlockVault(file, password);
+        var unlocked = service.UnlockVault(file.File, password);
 
-        Assert.Equal(doc.Meta.VaultName, unlocked.Meta.VaultName);
-        Assert.Equal(doc.Entries.Count, unlocked.Entries.Count);
+        Assert.Equal(doc.Meta.VaultName, unlocked.Document.Meta.VaultName);
+        Assert.Equal(doc.Entries.Count, unlocked.Document.Entries.Count);
     }
 
     [Fact]
@@ -38,6 +38,6 @@ public class VaultCryptoServiceTests
         var file = service.CreateVault(doc, "correct".AsSpan(), KdfProfile.Interactive);
 
         Assert.ThrowsAny<CryptographicException>(() =>
-            service.UnlockVault(file, "wrong".AsSpan()));
+            service.UnlockVault(file.File, "wrong".AsSpan()));
     }
 }

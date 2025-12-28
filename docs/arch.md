@@ -183,20 +183,26 @@ Formato JSON (MVP):
 
 ---
 
-### Fase 4 – Servicios sensibles
-
-- [ ] Clipboard con auto-borrado
-- [ ] Auto-lock por inactividad
-
----
-
-### Fase 5 – UI (Blazor Hybrid)
+### Fase 4 – UI (Blazor Hybrid)
 
 - [ ] Pantalla de unlock
 - [ ] Lista y búsqueda
 - [ ] Edición de entradas
 - [ ] Copiar contraseña
 - [ ] Gestión de bloqueo
+
+### Fase 4.5 – Importadores
+
+- [ ] Importador Markdown
+- [ ] Importador CSV (opcional)
+- [ ] Tests de importación
+
+---
+
+### Fase 5 – Servicios sensibles
+
+- [ ] Clipboard con auto-borrado
+- [ ] Auto-lock por inactividad
 
 ---
 

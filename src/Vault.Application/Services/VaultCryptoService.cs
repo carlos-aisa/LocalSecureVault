@@ -17,7 +17,7 @@ public sealed class VaultCryptoService
         _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
     }
 
-    public VaultFile CreateVault(
+    public VaultCreateResult CreateVault(
         VaultDocument document,
         ReadOnlySpan<char> masterPassword,
         KdfProfile profile,
@@ -61,10 +61,11 @@ public sealed class VaultCryptoService
         // Encrypt using the nonce we already decided (to match header)
         var blob = EncryptWithNonce(plaintext, aad, key, nonce);
 
-        return new VaultFile(header, blob.Ciphertext, blob.Tag);
+        var file = new VaultFile(header, blob.Ciphertext, blob.Tag);
+        return new VaultCreateResult(file, key); 
     }
 
-    public VaultDocument UnlockVault(VaultFile file, ReadOnlySpan<char> masterPassword)
+    public VaultUnlockResult UnlockVault(VaultFile file, ReadOnlySpan<char> masterPassword)
     {
         ArgumentNullException.ThrowIfNull(file);
 
@@ -81,8 +82,10 @@ public sealed class VaultCryptoService
         var blob = new EncryptedBlob(h.Nonce, file.Ciphertext, file.Tag);
         var plaintext = _crypto.Decrypt(blob, aad, key);
 
-        return _serializer.DeserializeFromUtf8(plaintext);
+        var document =  _serializer.DeserializeFromUtf8(plaintext);
+        return new VaultUnlockResult(document, key);
     }
+
     private EncryptedBlob EncryptWithNonce(
         ReadOnlySpan<byte> plaintext,
         ReadOnlySpan<byte> aad,
