@@ -1,0 +1,23 @@
+@page "/"
+@inject NavigationManager Nav
+@inject AppState State
+
+<h3>Local Secure Vault</h3>
+
+<p>Manage credentials in a local encrypted file.</p>
+
+<div style="display:flex; gap:12px;">
+    <button class="btn btn-primary" @onclick="GoCreate">Create new vault</button>
+    <button class="btn btn-secondary" disabled>Open existing vault (next)</button>
+    @if (State.IsUnlocked)
+    {
+        <button class="btn btn-outline-primary" @onclick="GoVault">
+            Go to Vault
+        </button>
+    }
+</div>
+
+@code {
+        private void GoCreate() => Nav.NavigateTo("/create");
+        private void GoVault() => Nav.NavigateTo("/vault");
+    }

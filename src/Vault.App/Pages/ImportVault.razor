@@ -1,0 +1,256 @@
+@page "/vault/import"
+
+@using Vault.Application.Import.Markdown
+@using Vault.Application.Import
+@using Vault.Application.Import.Models
+@using Vault.Application.Models
+
+@inject MarkdownVaultImporter Importer
+@inject AppState State
+@inject NavigationManager Nav
+
+<h3>Importar credenciales (Markdown)</h3>
+
+@if (!State.IsUnlocked)
+{
+    <div class="alert alert-warning">
+        Vault is locked. Unlock or create a vault first.
+    </div>
+}
+else
+{
+    <div class="mb-2 text-muted" style="font-size:0.95em">
+        <div><b>Vault:</b> @State.UnlockedDocument?.Meta.VaultName</div>
+        <div><b>File:</b> @State.CurrentVaultPath</div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Paste your Markdown here</label>
+        <textarea class="form-control" rows="10" @bind="Markdown"></textarea>
+        <div class="form-text">
+            Use <code>#</code> and <code>##</code> as categories. Tables must include Name and Password columns.
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-primary" @onclick="RunPreview" disabled="@IsBusy">
+            Preview
+        </button>
+
+        <button class="btn btn-success" @onclick="Apply" disabled="@(!CanApply || IsBusy)">
+            Apply (@PlannedAdds nuevas, @PlannedSkips duplicadas)
+        </button>
+
+        <button class="btn btn-outline-secondary" @onclick="Clear" disabled="@IsBusy">
+            Limpiar
+        </button>
+
+        <button class="btn btn-outline-secondary" @onclick="Back" disabled="@IsBusy">
+            Back
+        </button>
+        
+    </div>
+
+    @if (IsBusy)
+    {
+        <div class="mb-3">Processing…</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ApplyMessage))
+    {
+        <div class="alert alert-success">
+            @ApplyMessage
+        </div>
+    }
+
+    @if (HasPreview)
+    {
+        <hr />
+
+        <h5>Summary</h5>
+        <ul>
+            <li>Entries detected: <b>@Preview!.Entries.Count</b></li>
+            <li>New to add: <b>@PlannedAdds</b></li>
+            <li>Duplicates (will be ignored): <b>@PlannedSkips</b></li>
+        </ul>
+
+        @if (Preview!.Issues.Count > 0)
+        {
+            <h5>Issues</h5>
+            <div class="list-group mb-3">
+                @foreach (var w in Preview.Issues.OrderByDescending(x => x.Severity).ThenBy(x => x.LineNumber))
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                <b>@w.Severity</b>
+                                @if (w.LineNumber is not null)
+                                {
+                                    <span> (line @w.LineNumber)</span>
+                                }
+                            </span>
+                        </div>
+                        <div>@w.Message</div>
+                    </div>
+                }
+            </div>
+        }
+
+        <h5>Entries preview</h5>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Notes</th>
+                        <th>Tags</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Preview!.Entries)
+                    {
+                        var isDup = DuplicateSet.Contains(ComputeKey(row));
+                        <tr>
+                            <td>@row.Name</td>
+                            <td>@(row.Identifier ?? "")</td>
+                            <td>
+                                @if (ShowPasswords)
+                                {
+                                    @row.Password
+                                }
+                                else
+                                {
+                                    <span>••••••</span>
+                                }
+                            </td>
+                            <td>@(row.Notes ?? "")</td>
+                            <td>@string.Join(", ", row.Tags)</td>
+                            <td>
+                                @if (isDup)
+                                {
+                                    <span class="badge text-bg-secondary">Duplicate</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-success">New</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="showPw" @bind="ShowPasswords" />
+            <label class="form-check-label" for="showPw">Show passwords in preview</label>
+        </div>
+    }
+}
+
+@code {
+    private string Markdown { get; set; } = "";
+    private bool IsBusy { get; set; }
+
+    private ImportResult? Preview { get; set; }
+    private ImportApplyPlan? Plan { get; set; }
+
+    private bool HasPreview => Preview is not null && Plan is not null;
+    private bool CanApply => HasPreview && Plan!.AddActions.Count > 0;
+    private string? ApplyMessage { get; set; }
+
+    private int PlannedAdds => Plan?.AddActions.Count ?? 0;
+    private int PlannedSkips => Plan?.SkippedDuplicates.Count ?? 0;
+
+    private bool ShowPasswords { get; set; } = false;
+
+    // To paint the table as “New/Duplicate” without having an extra model yet
+    private HashSet<string> DuplicateSet { get; set; } = new(StringComparer.Ordinal);
+
+    private async Task RunPreview()
+    {
+        try
+        {
+            IsBusy = true;
+
+            // 1) Parse
+            Preview = Importer.Parse(Markdown);
+
+            // 2) Plan
+            Plan = ImportPlanner.BuildApplyPlan(State.UnlockedDocument!, Preview);
+
+            // 3) Duplicate index for the UI (just for display)
+            DuplicateSet = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var d in Plan.SkippedDuplicates)
+                DuplicateSet.Add(ComputeKey(d));
+
+            // Ensure the toggle does not leave passwords exposed by accident
+            ShowPasswords = false;
+
+            await Task.CompletedTask;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task Apply()
+    {
+        if (!CanApply) return;
+
+        try
+        {
+            IsBusy = true;
+
+            var res = Importer.Apply(State.UnlockedDocument!, Plan!);
+            State.MarkDirty();
+            ApplyMessage = $"Import applied. Added: {res.Added} · Duplicates skipped: {res.Skipped}";
+            
+            // Clear preview to avoid re-applying by accident
+            Preview = null;
+            Plan = null;
+            DuplicateSet.Clear();
+            ShowPasswords = false;
+
+            // Navigate back to /vault (or refresh)
+            Nav.NavigateTo("/vault");
+            await Task.CompletedTask;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void Back() => Nav.NavigateTo("/vault");
+
+    private void Clear()
+    {
+        Markdown = "";
+        Preview = null;
+        Plan = null;
+        DuplicateSet.Clear();
+        ShowPasswords = false;
+        ApplyMessage = null;
+    }
+
+    // Dedupe key: must match ImportPlanner.ComputeKey
+    // To avoid duplicating logic, you can expose ComputeKey as internal in ImportPlanner if you prefer.
+    private static string ComputeKey(ImportEntryDraft d)
+    {
+        static string N(string? s) =>
+            string.IsNullOrWhiteSpace(s) ? "" : s.Trim().ToLowerInvariant();
+
+        var tagPart = d.Tags is null || d.Tags.Count == 0
+            ? ""
+            : string.Join("|",
+                d.Tags.Where(t => !string.IsNullOrWhiteSpace(t))
+                      .Select(N)
+                      .Order(StringComparer.Ordinal));
+
+        return $"{N(d.Name)}::{N(d.Identifier)}::{tagPart}";
+    }
+}

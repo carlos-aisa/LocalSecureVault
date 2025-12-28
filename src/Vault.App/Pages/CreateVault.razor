@@ -1,0 +1,142 @@
+@page "/create"
+@using Vault.Application.Abstractions
+@using Vault.Application.Models
+@using Vault.App.Platform
+@inject IFileDialogService FileDialog
+@inject Vault.Application.Services.VaultCryptoService VaultCrypto
+@inject IVaultStore VaultStore
+@inject AppState State
+@inject NavigationManager Nav
+
+<h3>Create new vault</h3>
+
+<div style="max-width:520px;">
+    <div class="mb-3">
+        <label class="form-label">Vault name</label>
+        <input class="form-control" @bind="VaultName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Master password</label>
+        <input class="form-control" type="password" @bind="Password1" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Repeat master password</label>
+        <input class="form-control" type="password" @bind="Password2" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">KDF profile</label>
+        <select class="form-select" @bind="Profile">
+            <option value="@KdfProfile.Strong">Strong (recommended)</option>
+            <option value="@KdfProfile.Interactive">Interactive (faster)</option>
+        </select>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="alert alert-danger">@Error</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Success))
+    {
+        <div class="alert alert-success">@Success</div>
+    }
+
+    <div style="display:flex; gap:12px;">
+        <button class="btn btn-primary" @onclick="CreateAndSaveAsync" disabled="@IsBusy">
+            @(IsBusy ? "Creating..." : "Create & Save")
+        </button>
+
+        <button class="btn btn-secondary" @onclick='(() => Nav.NavigateTo("/"))' disabled="@IsBusy">
+            Cancel
+        </button>
+    </div>
+</div>
+
+@code {
+    private string VaultName { get; set; } = "Personal";
+    private string Password1 { get; set; } = "";
+    private string Password2 { get; set; } = "";
+    private KdfProfile Profile { get; set; } = KdfProfile.Strong;
+
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+    private string? Success { get; set; }
+
+    private async Task CreateAndSaveAsync()
+    {
+        Error = null;
+        Success = null;
+
+        if (string.IsNullOrWhiteSpace(VaultName))
+        {
+            Error = "Vault name is required.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(Password1))
+        {
+            Error = "Master password is required.";
+            return;
+        }
+
+        if (!string.Equals(Password1, Password2, StringComparison.Ordinal))
+        {
+            Error = "Passwords do not match.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            // 1) Create empty document
+            var doc = VaultDocument.CreateNew(VaultName);
+
+            // 2) Create encrypted VaultFile (in-memory)
+            var result = VaultCrypto.CreateVault(doc, Password1.AsSpan(), Profile);
+
+            // 3) Ask user where to save
+            var suggestedName = $"{SanitizeFileName(VaultName)}.vlt";
+            var path = await FileDialog.PickSavePathAsync(suggestedName);
+
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                Error = "Save cancelled.";
+                return;
+            }
+
+            await VaultStore.WriteAtomicAsync(path, result.File);
+
+            State.SetUnlocked(path, doc, result.SessionKey, result.File.Header);
+            Nav.NavigateTo("/vault");
+            Success = $"Vault saved: {path}";
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+            Password1 = "";
+            Password2 = "";
+        }
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        foreach (var c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+        return name.Trim();
+    }
+
+    // For FileSaver we need bytes, but the authoritative write is IVaultStore.
+    private static byte[] BuildFileBytes(Vault.Application.Abstractions.VaultFile file)
+    {
+        // Minimal: header+cipher+tag. IVaultStore will do the real write anyway.
+        // Keeping this for FileSaver stream length; content is overwritten by WriteAtomicAsync.
+        return Array.Empty<byte>();
+    }
+}

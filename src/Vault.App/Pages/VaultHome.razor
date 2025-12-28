@@ -1,0 +1,71 @@
+@using Vault.Application.Services;
+
+@page "/vault"
+@inject AppState State
+@inject VaultSaveService Saver
+@inject NavigationManager Nav
+
+@if (!State.IsUnlocked)
+{
+    <div class="alert alert-warning">
+        Vault is locked. Go back to <a href="/">Welcome</a>.
+    </div>
+}
+else
+{
+    <h3>Vault</h3>
+    <p><b>Path:</b> @State.CurrentVaultPath</p>
+    <p><b>Name:</b> @State.UnlockedDocument!.Meta.VaultName</p>
+
+    <div style="display:flex; gap:12px; margin-bottom:12px;">
+        <button class="btn btn-secondary" @onclick="Lock">Lock</button>
+
+       <button class="btn btn-outline-primary" @onclick="GoImport">
+            Import (Markdown)
+        </button>
+
+        <button class="btn btn-primary"
+                disabled="@(!State.IsDirty)"
+                @onclick="SaveAsync">
+            Save
+        </button>
+
+        <button class="btn btn-primary" disabled>Add entry (next)</button>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(SaveMsg))
+    {
+        <div class="alert alert-info">@SaveMsg</div>
+    }
+}
+
+@code {
+    private string? SaveMsg;
+    private void GoImport() => Nav.NavigateTo("/vault/import");
+    
+    private void Lock()
+    {
+        State.Lock();
+        Nav.NavigateTo("/");
+    }
+
+    private async Task SaveAsync()
+    {
+        SaveMsg = null;
+
+        try
+        {
+            await Saver.SaveAsync(
+                State.CurrentVaultPath!,
+                State.UnlockedDocument!,
+                State.SessionKey!,
+                State.CurrentHeader!);
+
+            State.MarkSaved();
+            SaveMsg = "Saved successfully.";
+        }
+        catch (Exception ex)
+        {
+            SaveMsg = $"Save failed: {ex.Message}";
+        }
+    }
+}

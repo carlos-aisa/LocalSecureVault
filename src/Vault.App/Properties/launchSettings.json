@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Vault.App": {
+      "commandName": "Project"
+    }
+  }
+}
