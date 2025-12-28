@@ -86,6 +86,40 @@ public sealed class VaultCryptoService
         return new VaultUnlockResult(document, key);
     }
 
+    public VaultFile SealForSave(
+        VaultDocument document,
+        VaultFileHeader currentHeader,
+        ReadOnlySpan<byte> sessionKey,
+        DateTimeOffset? nowUtc = null)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        var now = nowUtc ?? DateTimeOffset.UtcNow;
+
+        // Serialize current document
+        var plaintext = _serializer.SerializeToUtf8(document);
+
+        // New nonce on each save (good AES-GCM practice)
+        var nonce = RandomNumberGenerator.GetBytes(VaultFormatConstants.NonceSize);
+
+        // Keep KDF/salt parameters and CreatedTicks from the original header,
+        // but update UpdatedTicks and SchemaVersion (in case you change format)
+        var header = currentHeader with
+        {
+            SchemaVersion = (ushort)document.Meta.SchemaVersion,
+            UpdatedUtcTicks = now.UtcTicks,
+            Nonce = nonce
+        };
+
+        var aad = VaultHeaderSerializer.SerializeHeader(header);
+
+        // Encrypt using the nonce already embedded in header
+        var blob = EncryptWithNonce(plaintext, aad, sessionKey, nonce);
+
+        return new VaultFile(header, blob.Ciphertext, blob.Tag);
+    }
+
+
     private EncryptedBlob EncryptWithNonce(
         ReadOnlySpan<byte> plaintext,
         ReadOnlySpan<byte> aad,
