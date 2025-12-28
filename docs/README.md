@@ -1,49 +1,54 @@
 # Local Secure Vault — Documentation
 
-Este directorio contiene la documentación técnica del proyecto **Local Secure Vault**.
+This folder contains the technical documentation for the **Local Secure Vault** project.
 
-La documentación está pensada para:
-- Poder seguir el desarrollo paso a paso
-- Entender las decisiones de seguridad sin conocimientos previos en criptografía
-- Servir como referencia futura del diseño
+The documentation is intended to:
+
+- Follow the development step by step
+- Understand security decisions without prior cryptography knowledge
+- Serve as a future reference for the design and architecture choices made.
 
 ---
 
-## Documentos
+## Documents
 
-### Arquitectura y planificación
+### Architecture and Planning
+
 - [`arch.md`](arch.md)  
-  Arquitectura general, principios de diseño y roadmap de implementación.
+  General architecture, design principles, and implementation roadmap.  
 
-### Flujos y componentes
+### Flows and Components  
+
 - [`flows.md`](flows.md)  
-  Diagrama de componentes y flujos principales:
+  Diagram of main components and flows:
   - Create Vault
   - Unlock Vault
   - Save Changes
 
-### Formato del fichero
+### File Format
+
 - [`file-format.md`](file-format.md)  
-  Especificación exacta del formato del fichero cifrado:
+  Exact specification of the encrypted file format:
   - Header
   - Payload
-  - Cifrado y autenticación
-  - Versionado
+  - Encryption and authentication
+  - Versioning
 
-### Seguridad y tests
+### Security and Tests
+
 - [`security-tests.md`](security-tests.md)  
-  Lista de tests de seguridad obligatorios para el MVP:
+  List of mandatory security tests for the MVP:
   - KDF (Argon2id)
   - AEAD (AES-GCM)
-  - Integridad del fichero
-  - Clipboard y auto-lock
+  - File integrity
+  - Clipboard and auto-lock
 
 ---
 
-## Cómo usar esta documentación durante el desarrollo
+## How to Use This Documentation During Development
 
-- Antes de implementar una parte crítica, revisa el documento correspondiente.
-- Cada fase del roadmap en `arch.md` debe completarse **con tests**.
-- Si algo no está claro en la documentación, se mejora antes de escribir código.
+- Before implementing a critical part, review the corresponding document.
+- Each phase of the roadmap in `arch.md` must be completed **with tests**.
+- If something is not clear in the documentation, improve it before writing code.
 
-Este proyecto prioriza **entender lo que se construye**, no solo que funcione.
+This project prioritizes **understanding what is being built**, not just making it work. But trying that it works securely from day one. ;)

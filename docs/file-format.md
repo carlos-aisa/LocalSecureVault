@@ -1,9 +1,3 @@
-
----
-
-## `docs/file-format.md`
-
-```md
 # Vault File Format (VLT1) — Header spec (exact sizes)
 
 ## Overview
@@ -64,3 +58,4 @@ File layout:
     }
   ]
 }
+```

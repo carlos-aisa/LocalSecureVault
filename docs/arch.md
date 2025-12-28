@@ -1,213 +1,212 @@
 # Arquitectura y Plan de Implementación
 
-Este documento define la arquitectura técnica del proyecto **Local Secure Vault**, así como las decisiones de diseño y las etapas de implementación.
+This document defines the technical architecture of the **Local Secure Vault** project, as well as the design decisions and implementation stages.
 
-Está pensado para poder seguir el proyecto paso a paso, incluso sin experiencia previa en criptografía aplicada.
-
----
-
-## 1. Principios de diseño
-
-### 1.1 Seguridad primero
-
-- Todos los datos se almacenan cifrados
-- La master password nunca se guarda
-- La integridad de los datos debe poder verificarse
-- El fichero debe ser inútil para un atacante sin la contraseña
-
-### 1.2 Portabilidad
-
-- La bóveda debe poder restaurarse en otro equipo
-- No se depende de claves ligadas al sistema por defecto (DPAPI opcional)
-
-### 1.3 Separación de responsabilidades
-
-- La UI nunca toca criptografía directamente
-- El cifrado y almacenamiento están aislados
-- El dominio es independiente de infraestructura
+It is designed to allow following the project step by step, even without prior experience in applied cryptography.
 
 ---
 
-## 2. Arquitectura general
+## 1. Design Principles
 
-El proyecto sigue una arquitectura en capas inspirada en Clean Architecture.
+### 1.1 Security First
 
-### Proyectos
+- All data is stored encrypted
+- The master password is never saved
+- Data integrity must be verifiable
+- The file must be useless to an attacker without the password
+
+### 1.2 Portability
+
+- The vault must be restorable on another device
+- System-tied keys are not relied on by default (optional DPAPI)
+
+### 1.3 Separation of Concerns
+
+- The UI never touches cryptography directly
+- Encryption and storage are isolated
+- The domain is independent of infrastructure
+
+---
+
+## 2. General Architecture
+
+The project follows a layered architecture inspired by Clean Architecture.
+
+### Project Structure
 
 LocalSecureVault.sln
 │
 |-- Vault.Domain
-│ |- Entidades y reglas de negocio
+│ |- Entities and business rules
 │
 |-- Vault.Application
-│ |- Casos de uso y lógica de aplicación
+│ |- Use cases and application logic
 │
 |-- Vault.Crypto
-│ |- Criptografía (Argon2id + AES-GCM)
+│ |- Cryptography (Argon2id + AES-GCM)
 │
 |-- Vault.Storage
-│ |- Formato del fichero y acceso a disco
+│ |- File format and disk access
 │
 |-- Vault.Ui
 │ |- Blazor Hybrid (MAUI)
 
 ---
 
-## 3. Flujo de seguridad (visión conceptual)
+## 3. Security Flow (conceptual view)
 
-### 3.1 Creación de una bóveda
+### 3.1 Vault Creation
 
-1. El usuario introduce una master password
-2. Se genera un `salt` aleatorio
-3. Se derivan claves usando **Argon2id**
-4. El contenido inicial (vacío) se serializa a JSON
-5. Se cifra el payload con **AES-GCM**
-6. Se escribe un único fichero cifrado
-
----
-
-### 3.2 Apertura de una bóveda
-
-1. Se lee el header del fichero
-2. Se derivan claves usando los parámetros almacenados
-3. Se descifra el payload
-4. Si falla → contraseña incorrecta o fichero corrupto
+1. The user enters a master password
+2. A random `salt` is generated
+3. Keys are derived using **Argon2id**
+4. The initial (empty) content is serialized to JSON
+5. The payload is encrypted with **AES-GCM**
+6. A single encrypted file is written
 
 ---
 
-## 4. Criptografía (explicado sin jerga)
+### 3.2 Vault Opening
 
-### 4.1 Argon2id (derivación de claves)
-
-- Convierte una contraseña humana en una clave fuerte
-- Es lento a propósito (≈800 ms)
-- Usa mucha memoria para resistir ataques con GPU
-- Los parámetros se guardan en el fichero
-
-**Motivo:** proteger contra ataques offline si alguien roba el fichero.
+1. The file header is read
+2. Keys are derived using the stored parameters
+3. The payload is decrypted
+4. If it fails → incorrect password or corrupted file
 
 ---
 
-### 4.2 AES-GCM (cifrado autenticado)
+## 4. Cryptography (explained without jargon)
 
-- Cifra los datos
-- Detecta si alguien ha modificado el fichero
-- Evita ataques de manipulación silenciosa
+### 4.1 Argon2id (key derivation)
 
-**Resultado:** confidencialidad + integridad en un solo paso.
+- Converts a human password into a strong key
+- It is intentionally slow (≈800 ms)
+- Uses a lot of memory to resist GPU attacks
+- Parameters are stored in the file
+
+**Reason:** protect against offline attacks if someone steals the file.
 
 ---
 
-## 5. Formato del fichero cifrado (alto nivel)
+### 4.2 AES-GCM (authenticated encryption)
+
+- Encrypts the data
+- Detects if someone has modified the file
+- Prevents silent tampering attacks
+
+**Result:** confidentiality + integrity in a single step.
+
+---
+
+## 5. Encrypted File Format (high level)
 
 [ HEADER | CIPHERTEXT | AUTH TAG ]
 
+### Header (not secret, but protected)
 
-### Header (no secreto, pero protegido)
+Includes:
 
-Incluye:
-
-- Identificador del fichero
-- Versión
-- Parámetros de Argon2id
+- File identifier
+- Version
+- Argon2id parameters
 - Salt
-- Nonce de cifrado
-- Tipo de payload (JSON)
-- Flags futuros
+- Encryption nonce
+- Payload type (JSON)
+- Future flags
 
-El header se usa como **AAD** (Authenticated Associated Data),
-por lo que cualquier modificación invalida el descifrado.
+The header is used as **AAD** (Authenticated Associated Data),
+so any modification invalidates decryption.
 
 ---
 
-## 6. Payload interno
+## 6. Internal Payload
 
-Formato JSON (MVP):
+JSON format (MVP):
 
-- Metadatos de la bóveda
-- Lista de entradas:
+- Vault metadata
+- Entry list:
   - Id
-  - Nombre
-  - Usuario
+  - Name
+  - Username
   - Password
   - URL
-  - Notas
+  - Notes
   - Tags
-  - Fechas
+  - Dates
 
 ---
 
-## 7. Auto-lock y memoria
+## 7. Auto-lock and Memory Safety
 
-- La bóveda se bloquea tras X minutos de inactividad
-- Las claves viven en memoria solo mientras está desbloqueada
-- Se borran buffers sensibles cuando es posible (best effort)
-
----
-
-## 8. Roadmap de implementación
-
-### Fase 0 – Diseño (actual)
-
-- [x] Decisiones de seguridad
-- [x] Arquitectura definida
-- [x] Documentación inicial
+- The vault locks after X minutes of inactivity
+- Keys live in memory only while it is unlocked
+- Sensitive buffers are cleared when possible (best effort)
 
 ---
 
-### Fase 1 – Dominio y casos de uso
+## 8. Implementation Roadmap
 
-- [x] Entidades del dominio
-- [x] Validaciones
-- [x] CRUD de entradas
-- [x] Búsqueda
-- [x] Tests de negocio
+### Phase 0 – Design (current)
 
----
-
-### Fase 2 – Criptografía
-
-- [x] Implementación Argon2id
-- [x] Implementación AES-GCM
-- [x] Tests de cifrado/descifrado
-- [x] Tests de corrupción
+- [x] Security decisions
+- [x] Defined architecture
+- [x] Initial documentation
 
 ---
 
-### Fase 3 – Almacenamiento
+### Phase 1 – Domain and Use Cases
 
-- [x] Formato del fichero
-- [x] Escritura atómica
-- [x] Locks de fichero
-- [x] Tests de persistencia
-
----
-
-### Fase 4 – UI (Blazor Hybrid)
-
-- [ ] Pantalla de unlock
-- [ ] Lista y búsqueda
-- [ ] Edición de entradas
-- [ ] Copiar contraseña
-- [ ] Gestión de bloqueo
-
-### Fase 4.5 – Importadores
-
-- [ ] Importador Markdown
-- [ ] Importador CSV (opcional)
-- [ ] Tests de importación
+- [x] Domain entities
+- [x] Validations
+- [x] Entry CRUD
+- [x] Search
+- [x] Business tests
 
 ---
 
-### Fase 5 – Servicios sensibles
+### Phase 2 – Cryptography
 
-- [ ] Clipboard con auto-borrado
-- [ ] Auto-lock por inactividad
+- [x] Argon2id implementation
+- [x] AES-GCM implementation
+- [x] Encryption/decryption tests
+- [x] Corruption tests
 
 ---
 
-## 9. Filosofía de desarrollo
+### Phase 3 – Storage
 
-- Nada de “copiar código crypto de StackOverflow”
-- Todo lo crítico se entiende antes de implementarse
-- El proyecto sirve tanto como herramienta real como aprendizaje sólido
+- [x] File format
+- [x] Atomic write
+- [x] File locks
+- [x] Persistence tests
+
+---
+
+### Phase 4 – UI (Blazor Hybrid)
+
+- [ ] Unlock screen
+- [ ] List and search
+- [ ] Entry editing
+- [ ] Copy password
+- [ ] Lock management
+
+### Phase 4.5 – Importers
+
+- [x] Markdown importer
+- [ ] CSV importer (optional)
+- [x] Import tests
+
+---
+
+### Phase 5 – Sensitive Services
+
+- [ ] Clipboard with auto-clear
+- [ ] Auto-lock on inactivity
+
+---
+
+## 9. Development Philosophy
+
+- No "copy crypto code from StackOverflow"
+- Everything critical is understood before implementation
+- The project serves both as a real tool and solid learning resource
