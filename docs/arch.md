@@ -176,10 +176,10 @@ Formato JSON (MVP):
 
 ### Fase 3 – Almacenamiento
 
-- [ ] Formato del fichero
-- [ ] Escritura atómica
-- [ ] Locks de fichero
-- [ ] Tests de persistencia
+- [x] Formato del fichero
+- [x] Escritura atómica
+- [x] Locks de fichero
+- [x] Tests de persistencia
 
 ---
 

@@ -69,4 +69,3 @@ sequenceDiagram
   APP->>ST: WriteAtomic(path, Header + Ciphertext + Tag)
   APP-->>UI: Saved OK
 ```
-
