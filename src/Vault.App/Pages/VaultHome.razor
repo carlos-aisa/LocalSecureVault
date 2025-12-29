@@ -42,6 +42,11 @@ else
     private string? SaveMsg;
     private void GoImport() => Nav.NavigateTo("import");
 
+    protected override void OnInitialized()
+    {
+        if (!State.IsUnlocked)
+            Nav.NavigateTo("/open", replace: true);
+    }
     private void Lock()
     {
         State.Lock();

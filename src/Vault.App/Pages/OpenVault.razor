@@ -8,15 +8,36 @@
 @inject IVaultStore Store
 @inject Vault.App.Services.IVaultFilePicker Picker
 @inject Vault.App.Services.IRecentVaultPathStore Recent
+@inject IJSRuntime JS
 
 <h3>Open existing vault</h3>
+
+@if (State.IsUnlocked)
+{
+    <div class="alert alert-warning">
+        <strong>The vault is currently unlocked.</strong>
+        To open another vault, lock the current one first.
+    </div>
+
+    <div style="display:flex; gap:12px;" class="mb-3">
+        <button class="btn btn-secondary" @onclick="BackToVault" disabled="@IsBusy">
+            Back to vault
+        </button>
+
+        <button class="btn btn-danger" @onclick="LockAsync" disabled="@IsBusy">
+            Lock vault
+        </button>
+    </div>
+
+    <hr />
+}
 
 @if (HasRecent)
 {
     <div class="mb-3">
         <button class="btn btn-outline-primary"
                 @onclick="UseLastVault"
-                disabled="@IsBusy">
+                disabled="@(IsBusy || State.IsUnlocked)">
             Open last vault
         </button>
 
@@ -30,8 +51,14 @@
     <label class="form-label">Vault file</label>
 
     <div style="display:flex; gap:12px;">
-        <input class="form-control" @bind="VaultPath" @bind:event="oninput" @onkeypress="HandleKeyPress" />
-        <button class="btn btn-outline-secondary" @onclick="BrowseAsync" disabled="@IsBusy">
+        <input class="form-control"
+               @bind="VaultPath" @bind:event="oninput"
+               @onkeypress="HandleKeyPress"
+               disabled="@(IsBusy || State.IsUnlocked)" />
+
+        <button class="btn btn-outline-secondary"
+                @onclick="BrowseAsync"
+                disabled="@(IsBusy || State.IsUnlocked)">
             Browse…
         </button>
     </div>
@@ -39,11 +66,20 @@
 
 <div class="mb-3">
     <label class="form-label">Master password</label>
-    <input type="password" class="form-control" @bind="Password" @bind:event="oninput" @onkeypress="HandleKeyPress" />
+    <input type="password"
+           class="form-control"
+           @bind="Password" @bind:event="oninput"
+           @onkeypress="HandleKeyPress"
+           disabled="@(IsBusy || State.IsUnlocked)" />
 </div>
 
 <div style="display:flex; gap:12px;">
-    <button class="btn btn-primary" @onclick="OpenAsync" disabled="@(IsBusy || string.IsNullOrWhiteSpace(VaultPath) || string.IsNullOrWhiteSpace(Password))">
+    <button class="btn btn-primary"
+            @onclick="OpenAsync"
+            disabled="@(IsBusy
+                || State.IsUnlocked
+                || string.IsNullOrWhiteSpace(VaultPath)
+                || string.IsNullOrWhiteSpace(Password))">
         Open vault
     </button>
 
@@ -67,8 +103,26 @@
 
     protected override void OnInitialized()
     {
-        var last = Recent.GetLastPath();
-        RecentPathHint = last;
+        RecentPathHint = Recent.GetLastPath();
+    }
+
+    private void BackToVault() => Nav.NavigateTo("/vault");
+
+    private async Task LockAsync()
+    {
+        Error = null;
+
+        if (State.IsDirty)
+        {
+            var ok = await JS.InvokeAsync<bool>(
+                "confirm",
+                "You have unsaved changes. Lock anyway? (Changes will be lost)");
+            if (!ok) return;
+        }
+
+        State.Lock();
+        // replace:true evita volver atrás a una pantalla que ya no aplica
+        Nav.NavigateTo("/open", replace: true);
     }
 
     private async Task BrowseAsync()
@@ -92,7 +146,6 @@
 
             State.SetUnlocked(VaultPath, result.Document, result.SessionKey, file.Header);
 
-            // save last path
             Recent.SetLastPath(VaultPath);
 
             Nav.NavigateTo("/vault");
@@ -120,7 +173,11 @@
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !IsBusy && !string.IsNullOrWhiteSpace(VaultPath) && !string.IsNullOrWhiteSpace(Password))
+        if (e.Key == "Enter"
+            && !IsBusy
+            && !State.IsUnlocked
+            && !string.IsNullOrWhiteSpace(VaultPath)
+            && !string.IsNullOrWhiteSpace(Password))
         {
             await OpenAsync();
         }

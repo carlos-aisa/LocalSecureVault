@@ -26,9 +26,17 @@ public sealed class AppState
         Changed?.Invoke();
     }
 
-    public void MarkDirty() => IsDirty = true;
+    public void MarkDirty()
+    {
+        IsDirty = true;
+        Changed?.Invoke();
+    }
 
-    public void MarkSaved() => IsDirty = false;
+    public void MarkSaved()
+    {
+        IsDirty = false;
+        Changed?.Invoke();
+    }
 
     public void Lock()
     {
