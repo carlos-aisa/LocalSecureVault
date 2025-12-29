@@ -1,11 +1,12 @@
 @page "/create"
 @using Vault.Application.Abstractions
 @using Vault.Application.Models
+@using Vault.Application.Services
 @using Vault.App.Platform
 @using Vault.App.Services;
+
+@inject VaultAppService App
 @inject IFileDialogService FileDialog
-@inject IVaultCryptoService VaultCrypto
-@inject IVaultStore VaultStore
 @inject AppState State
 @inject NavigationManager Nav
 @inject IRecentVaultPathStore Recent
@@ -93,32 +94,46 @@
         IsBusy = true;
         try
         {
-            // 1) Create empty document
-            var doc = VaultDocument.CreateNew(VaultName);
+            // 1) Create vault in memory (crypto + header + session key)
+            var createdRes = App.CreateInMemory(
+                VaultName,
+                Password1.AsMemory(),
+                Profile);
 
-            // 2) Create encrypted VaultFile (in-memory)
-            var result = VaultCrypto.CreateVault(doc, Password1.AsSpan(), Profile);
+            if (!createdRes.IsSuccess)
+            {
+                Error = createdRes.Error!.UserMessage;
+                return;
+            }
+            var created = createdRes.Value!;
 
-            // 3) Ask user where to save
+            // 2) Ask user where to save
             var suggestedName = $"{SanitizeFileName(VaultName)}.vlt";
             var path = await FileDialog.PickSavePathAsync(suggestedName);
-
             if (string.IsNullOrWhiteSpace(path))
             {
                 Error = "Save cancelled.";
                 return;
             }
 
-            await VaultStore.WriteAtomicAsync(path, result.File);
+            // 3) Write encrypted vault file
+            var writeRes = await App.WriteNewVaultAsync(path, created.File);
+            if (!writeRes.IsSuccess)
+            {
+                Error = writeRes.Error!.UserMessage;
+                return;
+            }
 
-            State.SetUnlocked(path, doc, result.SessionKey, result.File.Header);
+            // 4) Set unlocked state
+            State.SetUnlocked(
+                path,
+                created.Document,
+                created.SessionKey,
+                created.File.Header);
+            
             Recent.SetLastPath(path);
             Nav.NavigateTo("/vault");
             Success = $"Vault saved: {path}";
-        }
-        catch (Exception ex)
-        {
-            Error = ex.Message;
         }
         finally
         {

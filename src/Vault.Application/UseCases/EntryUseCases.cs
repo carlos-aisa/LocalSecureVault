@@ -3,7 +3,7 @@ using Vault.Domain;
 
 namespace Vault.Application.UseCases;
 
-public sealed class EntryCommands
+public sealed class EntryUseCases
 {
     public VaultEntry AddEntry(
         VaultDocument document,

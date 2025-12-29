@@ -61,9 +61,9 @@ public sealed class VaultSaveService
             return VaultResult<Unit>.Fail(new(VaultErrorCode.Unknown, "Unexpected error while saving the vault.", ex.Message));
         }
     }
+}
 
-    public readonly struct Unit
-    {
-        public static readonly Unit Value = new();
-    }
+public readonly struct Unit
+{
+    public static readonly Unit Value = new();
 }
