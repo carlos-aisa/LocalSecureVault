@@ -8,9 +8,9 @@ namespace Vault.Application.Services;
 public sealed class VaultSaveService
 {
     private readonly IVaultStore _store;
-    private readonly VaultCryptoService _crypto;
+    private readonly IVaultCryptoService _crypto;
 
-    public VaultSaveService(IVaultStore store, VaultCryptoService crypto)
+    public VaultSaveService(IVaultStore store, IVaultCryptoService crypto)
     {
         _store = store;
         _crypto = crypto;

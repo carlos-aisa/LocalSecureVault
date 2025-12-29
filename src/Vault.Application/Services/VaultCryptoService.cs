@@ -4,7 +4,7 @@ using Vault.Application.Models;
 
 namespace Vault.Application.Services;
 
-public sealed class VaultCryptoService
+public sealed class VaultCryptoService : IVaultCryptoService
 {
     private readonly ICryptoProvider _crypto;
     private readonly IVaultPayloadSerializer _serializer;

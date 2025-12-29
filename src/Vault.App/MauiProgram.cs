@@ -33,12 +33,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ICryptoProvider, CryptoProvider>();
 		builder.Services.AddSingleton<IVaultStore, FileVaultStore>();
 		builder.Services.AddSingleton<IVaultPayloadSerializer, JsonVaultPayloadSerializer>();
-		builder.Services.AddSingleton<VaultCryptoService>();
+		builder.Services.AddSingleton<IVaultCryptoService, VaultCryptoService>();
 		builder.Services.AddSingleton<AppState>();
 		builder.Services.AddSingleton<MarkdownVaultImporter>();
 		builder.Services.AddSingleton<VaultSaveService>();
 		builder.Services.AddSingleton<IVaultFilePicker, MauiVaultFilePicker>();
 		builder.Services.AddSingleton<IRecentVaultPathStore, PreferencesRecentVaultPathStore>();
+		builder.Services.AddSingleton<VaultAppService>();
 
 		return builder.Build();
 	}

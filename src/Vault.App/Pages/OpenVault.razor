@@ -1,13 +1,15 @@
 @using Vault.Application.Abstractions;
 @using Vault.Application.Services;
+@using Vault.Application.Models;
+@using Vault.App.Services;
 
 @page "/open"
 @inject NavigationManager Nav
 @inject AppState State
-@inject VaultCryptoService Crypto
 @inject IVaultStore Store
-@inject Vault.App.Services.IVaultFilePicker Picker
-@inject Vault.App.Services.IRecentVaultPathStore Recent
+@inject IVaultFilePicker Picker
+@inject IRecentVaultPathStore Recent
+@inject VaultAppService App
 @inject IJSRuntime JS
 
 <h3>Open existing vault</h3>
@@ -141,19 +143,23 @@
 
         try
         {
-            var file = await Store.ReadAsync(VaultPath);
-            var result = Crypto.UnlockVault(file, Password);
+            var result = await App.OpenAsync(VaultPath, Password.AsMemory());
 
-            State.SetUnlocked(VaultPath, result.Document, result.SessionKey, file.Header);
+            if (!result.IsSuccess)
+            {
+                Error = result.Error!.UserMessage;
 
-            Recent.SetLastPath(VaultPath);
+                // Only invalidates if the file does not exist or the path is invalid
+                if (result.Error.Code is VaultErrorCode.FileNotFound or VaultErrorCode.InvalidFormat)
+                    Recent.Clear();
 
+                return;
+            }
+
+            var unlocked = result.Value!;
+            State.SetUnlocked(unlocked.Path, unlocked.Document, unlocked.SessionKey, unlocked.Header);
+            Recent.SetLastPath(unlocked.Path);
             Nav.NavigateTo("/vault");
-        }
-        catch (Exception ex)
-        {
-            Error = "Failed to open vault: " + ex.Message;
-            Recent.Clear();
         }
         finally
         {
