@@ -1,145 +1,157 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Vault.Application.Abstractions;
-using Vault.Application.Services;
+using Vault.Application.Import;
+using Vault.Application.Import.Markdown;
+using Vault.Application.Import.Models;
 using Vault.Application.Models;
+using Vault.Application.Services;
+using Vault.Application.UseCases;
 using Xunit;
 
-namespace Vault.Application.Tests.Services
+namespace Vault.Application.Tests.Services;
+
+public sealed class VaultAppServiceOpenTests
 {
-    public sealed class VaultAppServiceTests
+    [Fact]
+    public async Task OpenAsync_WhenPathIsEmpty_ReturnsInvalidPath()
     {
-        [Fact]
-        public async Task OpenAsync_WhenPathIsEmpty_ReturnsInvalidFormat()
+        var svc = CreateSut(
+            storeRead: _ => Task.FromResult<VaultFile>(null!),
+            cryptoUnlock: _ => throw new Exception("should not be called"));
+
+        var res = await svc.OpenAsync("", "pw".AsMemory());
+
+        Assert.False(res.IsSuccess);
+        Assert.Equal(VaultErrorCode.InvalidPath, res.Error!.Code);
+    }
+
+    [Fact]
+    public async Task OpenAsync_WhenStoreThrowsFileNotFound_ReturnsFileNotFound()
+    {
+        var svc = CreateSut(
+            storeRead: _ => throw new FileNotFoundException(),
+            cryptoUnlock: _ => throw new Exception("should not be called"));
+
+        var res = await svc.OpenAsync("c:\\missing.vlt", "pw".AsMemory());
+
+        Assert.False(res.IsSuccess);
+        Assert.Equal(VaultErrorCode.FileNotFound, res.Error!.Code);
+    }
+
+    [Fact]
+    public async Task OpenAsync_WhenCryptoThrowsInvalidOperation_ReturnsInvalidFormat()
+    {
+        var svc = CreateSut(
+            storeRead: _ => Task.FromResult<VaultFile>(DummyVaultFile()),
+            cryptoUnlock: _ => throw new InvalidOperationException());
+
+        var res = await svc.OpenAsync("c:\\vault.vlt", "pw".AsMemory());
+
+        Assert.False(res.IsSuccess);
+        Assert.Equal(VaultErrorCode.InvalidFormat, res.Error!.Code);
+    }
+
+    [Fact]
+    public async Task OpenAsync_WhenCryptoThrowsCryptographicException_ReturnsUnsupportedOrCorrupted()
+    {
+        var svc = CreateSut(
+            storeRead: _ => Task.FromResult<VaultFile>(DummyVaultFile()),
+            cryptoUnlock: _ => throw new CryptographicException());
+
+        var res = await svc.OpenAsync("c:\\vault.vlt", "pw".AsMemory());
+
+        Assert.False(res.IsSuccess);
+        Assert.Equal(VaultErrorCode.UnsupportedOrCorrupted, res.Error!.Code);
+    }
+
+    // ---------- helpers ----------
+
+    private static VaultAppService CreateSut(
+        Func<string, Task<VaultFile>> storeRead,
+        Func<VaultFile, VaultUnlockResult> cryptoUnlock)
+    {
+        var store = new FakeStore(storeRead);
+        var crypto = new FakeCrypto(cryptoUnlock);
+
+        // No usados por OpenAsync, pero requeridos por el constructor:
+        var saver = new FakeSaver();
+        var import = new FakeImportService();
+
+        return new VaultAppService(store, crypto, saver, import);
+    }
+
+    private sealed class FakeStore : IVaultStore
+    {
+        private readonly Func<string, Task<VaultFile>> _read;
+        public FakeStore(Func<string, Task<VaultFile>> read) => _read = read;
+
+        public Task<VaultFile> ReadAsync(string path, CancellationToken ct = default) => _read(path);
+
+        public Task WriteAtomicAsync(string path, VaultFile file, CancellationToken ct = default)
+            => throw new NotImplementedException();
+    }
+
+    private sealed class FakeCrypto : IVaultCryptoService
+    {
+        private readonly Func<VaultFile, VaultUnlockResult> _unlock;
+        public FakeCrypto(Func<VaultFile, VaultUnlockResult> unlock) => _unlock = unlock;
+
+        public VaultUnlockResult UnlockVault(VaultFile file, ReadOnlySpan<char> masterPassword) => _unlock(file);
+
+        public VaultCreateResult CreateVault(VaultDocument doc, ReadOnlySpan<char> masterPassword, KdfProfile profile, DateTimeOffset? nowUtc = null)
+            => throw new NotImplementedException();
+
+        public VaultFile SealForSave(VaultDocument document, VaultFileHeader header, ReadOnlySpan<byte> sessionKey, DateTimeOffset? nowUtc = null)
+            => throw new NotImplementedException();
+    }
+
+    // Fakes mínimos solo para satisfacer el ctor
+    private sealed class FakeSaver : VaultSaveService
+    {
+        public FakeSaver() : base(new DummyStore(), new DummyCrypto()) { }
+
+        private sealed class DummyStore : IVaultStore
         {
-            var store = new FakeStore(_ => Task.FromResult<VaultFile>(null!));
-            var crypto = new FakeCrypto(_ => throw new Exception("Should not be called"));
-
-            var svc = new VaultAppService(store, crypto);
-
-            var res = await svc.OpenAsync("", "pw".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.NotNull(res.Error);
-            Assert.Equal(VaultErrorCode.InvalidFormat, res.Error!.Code);
+            public Task<VaultFile> ReadAsync(string path, CancellationToken ct = default) => throw new NotImplementedException();
+            public Task WriteAtomicAsync(string path, VaultFile file, CancellationToken ct = default) => throw new NotImplementedException();
         }
 
-        [Fact]
-        public async Task OpenAsync_WhenStoreThrowsFileNotFound_ReturnsFileNotFound()
+        private sealed class DummyCrypto : IVaultCryptoService
         {
-            var store = new FakeStore(_ => throw new FileNotFoundException("nope"));
-            var crypto = new FakeCrypto(_ => throw new Exception("Should not be called"));
-
-            var svc = new VaultAppService(store, crypto);
-
-            var res = await svc.OpenAsync("c:\\missing.vault", "pw".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.Equal(VaultErrorCode.FileNotFound, res.Error!.Code);
+            public VaultUnlockResult UnlockVault(VaultFile file, ReadOnlySpan<char> masterPassword) => throw new NotImplementedException();
+            public VaultCreateResult CreateVault(VaultDocument doc, ReadOnlySpan<char> masterPassword, KdfProfile profile, DateTimeOffset? nowUtc = null) => throw new NotImplementedException();
+            public VaultFile SealForSave(VaultDocument document, VaultFileHeader header, ReadOnlySpan<byte> sessionKey, DateTimeOffset? nowUtc = null) => throw new NotImplementedException();
         }
+    }
 
-        [Fact]
-        public async Task OpenAsync_WhenStoreThrowsUnauthorized_ReturnsAccessDenied()
-        {
-            var store = new FakeStore(_ => throw new UnauthorizedAccessException("denied"));
-            var crypto = new FakeCrypto(_ => throw new Exception("Should not be called"));
+    private sealed class FakeImportService : VaultImportService
+    {
+        public FakeImportService() : base(new MarkdownVaultImporter()) { }
+    }
 
-            var svc = new VaultAppService(store, crypto);
+    private static VaultFile DummyVaultFile()
+    {
+        var header = new VaultFileHeader(
+            Magic: "VLT1",
+            Version: 1,
+            Flags: 0,
+            KdfId: 1,
+            PayloadEncoding: 1,
+            SchemaVersion: 1,
+            Argon2MemoryKiB: 64 * 1024,
+            Argon2Iterations: 3,
+            Argon2Parallelism: 1,
+            Salt: new byte[16],
+            Nonce: new byte[12],
+            CreatedUtcTicks: DateTimeOffset.UtcNow.UtcTicks,
+            UpdatedUtcTicks: DateTimeOffset.UtcNow.UtcTicks,
+            Reserved: new byte[16]
+        );
 
-            var res = await svc.OpenAsync("c:\\vault.vault", "pw".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.Equal(VaultErrorCode.AccessDenied, res.Error!.Code);
-        }
-
-        [Fact]
-        public async Task OpenAsync_WhenStoreThrowsIOException_ReturnsIoError()
-        {
-            var store = new FakeStore(_ => throw new IOException("io"));
-            var crypto = new FakeCrypto(_ => throw new Exception("Should not be called"));
-
-            var svc = new VaultAppService(store, crypto);
-
-            var res = await svc.OpenAsync("c:\\vault.vault", "pw".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.Equal(VaultErrorCode.IoError, res.Error!.Code);
-        }
-
-        [Fact]
-        public async Task OpenAsync_WhenCryptoThrowsInvalidOperation_ReturnsInvalidFormat()
-        {
-            // store devuelve algo (aunque sea null!) porque el fake crypto no lo usa
-            var store = new FakeStore(_ => Task.FromResult<VaultFile>(null!));
-            var crypto = new FakeCrypto(_ => throw new InvalidOperationException("Invalid vault file."));
-
-            var svc = new VaultAppService(store, crypto);
-
-            var res = await svc.OpenAsync("c:\\vault.vault", "pw".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.Equal(VaultErrorCode.InvalidFormat, res.Error!.Code);
-        }
-
-        [Fact]
-        public async Task OpenAsync_WhenCryptoThrowsCryptographicException_ReturnsUnsupportedOrCorrupted()
-        {
-            var store = new FakeStore(_ => Task.FromResult<VaultFile>(null!));
-            var crypto = new FakeCrypto(_ => throw new CryptographicException("tag mismatch"));
-
-            var svc = new VaultAppService(store, crypto);
-
-            var res = await svc.OpenAsync("c:\\vault.vault", "wrong".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.Equal(VaultErrorCode.UnsupportedOrCorrupted, res.Error!.Code);
-        }
-
-        [Fact]
-        public async Task OpenAsync_WhenUnexpectedException_ReturnsUnknown()
-        {
-            var store = new FakeStore(_ => throw new Exception("boom"));
-            var crypto = new FakeCrypto(_ => throw new Exception("Should not be called"));
-
-            var svc = new VaultAppService(store, crypto);
-
-            var res = await svc.OpenAsync("c:\\vault.vault", "pw".AsMemory());
-
-            Assert.False(res.IsSuccess);
-            Assert.Equal(VaultErrorCode.Unknown, res.Error!.Code);
-        }
-
-        // ----- Fakes -----
-
-        private sealed class FakeStore : IVaultStore
-        {
-            private readonly Func<string, Task<VaultFile>> _read;
-
-            public FakeStore(Func<string, Task<VaultFile>> read) => _read = read;
-
-            public Task<VaultFile> ReadAsync(string path, CancellationToken ct = default) => _read(path);
-
-            public Task WriteAtomicAsync(string path, VaultFile file, CancellationToken ct = default)
-                => throw new NotImplementedException("Not used in these tests.");
-        }
-
-        private sealed class FakeCrypto : IVaultCryptoService
-        {
-            private readonly Func<VaultFile, VaultUnlockResult> _unlock;
-
-            public FakeCrypto(Func<VaultFile, VaultUnlockResult> unlock) => _unlock = unlock;
-
-            public VaultUnlockResult UnlockVault(VaultFile file, ReadOnlySpan<char> masterPassword)
-                => _unlock(file);
-
-            public VaultCreateResult CreateVault(VaultDocument document,ReadOnlySpan<char> masterPassword,
-                                                KdfProfile profile,DateTimeOffset? nowUtc = null)
-                => throw new NotImplementedException("Not used in these tests.");
-            public VaultFile SealForSave(VaultDocument document,VaultFileHeader currentHeader,
-                                        ReadOnlySpan<byte> sessionKey,DateTimeOffset? nowUtc = null)
-                => throw new NotImplementedException("Not used in these tests.");
-        }
+        return new VaultFile(header, Array.Empty<byte>(), Array.Empty<byte>());
     }
 }

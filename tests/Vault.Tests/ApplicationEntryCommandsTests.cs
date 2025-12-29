@@ -13,7 +13,7 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(1);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryCommands();
+        var uc = new EntryUseCases();
 
         var entry = uc.AddEntry(doc, "GitHub", "pw", nowUtc: t2);
 
@@ -29,7 +29,7 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(5);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryCommands();
+        var uc = new EntryUseCases();
         var entry = uc.AddEntry(doc, "A", "P", nowUtc: t1);
 
         uc.UpdateEntry(doc, entry.Id, "B", "Q", nowUtc: t2);
@@ -46,7 +46,7 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(3);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryCommands();
+        var uc = new EntryUseCases();
         var entry = uc.AddEntry(doc, "A", "P", nowUtc: t1);
 
         var removed = uc.DeleteEntry(doc, entry.Id, nowUtc: t2);

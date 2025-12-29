@@ -1,7 +1,8 @@
 using Vault.Application.Abstractions;
 using Vault.Application.Models;
 using System.Security.Cryptography;
-
+using Vault.Application.Import.Models;
+using Vault.Application.Import;
 
 namespace Vault.Application.Services;
 
@@ -10,18 +11,20 @@ public sealed class VaultAppService
     private readonly IVaultStore _store;
     private readonly IVaultCryptoService _crypto;
     private readonly VaultSaveService _saver;
+    private readonly VaultImportService _import;
 
-    public VaultAppService(IVaultStore store, IVaultCryptoService crypto, VaultSaveService saver)
+    public VaultAppService(IVaultStore store, IVaultCryptoService crypto, VaultSaveService saver, VaultImportService import)
     {
         _store = store;
         _crypto = crypto;
         _saver = saver;
+        _import = import;
     }
 
     public async Task<VaultResult<UnlockedVault>> OpenAsync(string path, ReadOnlyMemory<char> password)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return VaultResult<UnlockedVault>.Fail(new(VaultErrorCode.InvalidFormat, "Select a vault file."));
+            return VaultResult<UnlockedVault>.Fail(new(VaultErrorCode.InvalidPath, "Select a vault file."));
 
         try
         {
@@ -131,6 +134,22 @@ public sealed class VaultAppService
             return VaultResult<Unit>.Fail(new(VaultErrorCode.Unknown, "Unexpected error while saving the vault."));
         }
     }
+
+    public VaultResult<(ImportResult Result, ImportApplyPlan Plan)> ImportPreview(string markdown, VaultDocument document)
+    {
+        var res =  _import.Preview(markdown);
+        if (!res.IsSuccess)
+            return VaultResult<(ImportResult, ImportApplyPlan)>.Fail(res.Error!);
+            
+        var plan = ImportPlanner.BuildApplyPlan(document, res.Value!);
+        return VaultResult<(ImportResult, ImportApplyPlan)>.Ok((res.Value!, plan));
+    }
+
+    public VaultResult<ApplyResult> ImportApply(
+                    VaultDocument document,
+                    ImportApplyPlan plan,
+                    DateTimeOffset? nowUtc = null)
+        => _import.Apply(document, plan, nowUtc);
 }
 
 // CreateInMemory Result. (UI use it for State.SetUnlocked after save)

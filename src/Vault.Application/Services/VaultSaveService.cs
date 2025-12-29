@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace Vault.Application.Services;
 
-public sealed class VaultSaveService
+public class VaultSaveService
 {
     private readonly IVaultStore _store;
     private readonly IVaultCryptoService _crypto;

@@ -11,7 +11,7 @@ public class SearchServiceTests
     public void Search_EmptyQuery_ReturnsAll()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryCommands();
+        var uc = new EntryUseCases();
 
         uc.AddEntry(doc, "GitHub", "pw");
         uc.AddEntry(doc, "Google", "pw");
@@ -26,7 +26,7 @@ public class SearchServiceTests
     public void Search_FindsByFields()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryCommands();
+        var uc = new EntryUseCases();
 
         uc.AddEntry(doc, "GitHub", "pw", username: "carlos", url: "https://github.com", notes: "work", tags: new[] { "dev" });
         uc.AddEntry(doc, "Bank", "pw", username: "me", url: "https://bank.local", notes: "money", tags: new[] { "finance" });

@@ -4,8 +4,9 @@
 @using Vault.Application.Import
 @using Vault.Application.Import.Models
 @using Vault.Application.Models
+@using Vault.Application.Services;
 
-@inject MarkdownVaultImporter Importer
+@inject VaultAppService App
 @inject AppState State
 @inject NavigationManager Nav
 
@@ -179,14 +180,19 @@ else
         try
         {
             IsBusy = true;
+            var res = App.ImportPreview(Markdown, State.UnlockedDocument!);
 
-            // 1) Parse
-            Preview = Importer.Parse(Markdown);
+            if (!res.IsSuccess)
+            {
+                ApplyMessage = $"Error during import preview: {res.Error!.UserMessage}";
+                Preview = null;
+                Plan = null;
+                DuplicateSet.Clear();
+                return;
+            }
 
-            // 2) Plan
-            Plan = ImportPlanner.BuildApplyPlan(State.UnlockedDocument!, Preview);
-
-            // 3) Duplicate index for the UI (just for display)
+            Preview = res.Value!.Result;
+            Plan = res.Value!.Plan;
             DuplicateSet = new HashSet<string>(StringComparer.Ordinal);
             foreach (var d in Plan.SkippedDuplicates)
                 DuplicateSet.Add(ComputeKey(d));
@@ -209,10 +215,20 @@ else
         try
         {
             IsBusy = true;
+            var res = App.ImportApply(State.UnlockedDocument!, Plan!);
+            if (!res.IsSuccess)
+            {
+                ApplyMessage = res.Error!.UserMessage;
+                return;
+            }
 
-            var res = Importer.Apply(State.UnlockedDocument!, Plan!);
+            if (res.Value!.Added > 0)
+            {
+                State.MarkDirty();
+            }
+
             State.MarkDirty();
-            ApplyMessage = $"Import applied. Added: {res.Added} · Duplicates skipped: {res.Skipped}";
+            ApplyMessage = $"Import applied. Added: {res.Value.Added} · Duplicates skipped: {res.Value.Skipped}";
             
             // Clear preview to avoid re-applying by accident
             Preview = null;
