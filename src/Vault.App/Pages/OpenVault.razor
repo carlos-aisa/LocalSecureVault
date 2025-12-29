@@ -30,7 +30,7 @@
     <label class="form-label">Vault file</label>
 
     <div style="display:flex; gap:12px;">
-        <input class="form-control" @bind="VaultPath" />
+        <input class="form-control" @bind="VaultPath" @bind:event="oninput" @onkeypress="HandleKeyPress" />
         <button class="btn btn-outline-secondary" @onclick="BrowseAsync" disabled="@IsBusy">
             Browse…
         </button>
@@ -39,7 +39,7 @@
 
 <div class="mb-3">
     <label class="form-label">Master password</label>
-    <input type="password" class="form-control" @bind="Password" />
+    <input type="password" class="form-control" @bind="Password" @bind:event="oninput" @onkeypress="HandleKeyPress" />
 </div>
 
 <div style="display:flex; gap:12px;">
@@ -115,6 +115,14 @@
         {
             VaultPath = RecentPathHint;
             Error = null;
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !IsBusy && !string.IsNullOrWhiteSpace(VaultPath) && !string.IsNullOrWhiteSpace(Password))
+        {
+            await OpenAsync();
         }
     }
 

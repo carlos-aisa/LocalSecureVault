@@ -82,3 +82,46 @@ a, .btn-link {
 		padding-left: env(safe-area-inset-left);
 	}
 }
+
+/* === Buttons: disabled must be obvious === */
+button.btn:disabled,
+a.btn.disabled,
+.btn.disabled {
+  opacity: 0.45 !important;                 /* More visual difference */
+  filter: grayscale(20%);                   /* Optional: “turns off” the color */
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+/* Ensures text contrast in disabled state */
+button.btn:disabled,
+a.btn.disabled,
+.btn.disabled {
+  color: rgba(0,0,0,0.55) !important;
+}
+
+/* === Hover: make it noticeable, but only for enabled === */
+button.btn:not(:disabled):hover,
+a.btn:not(.disabled):hover {
+  filter: brightness(0.95);                 /* Makes the change more noticeable */
+  box-shadow: 0 0.2rem 0.6rem rgba(0,0,0,0.12);
+}
+
+/* === Active/click feedback === */
+button.btn:not(:disabled):active,
+a.btn:not(.disabled):active {
+  box-shadow: 0 0.1rem 0.3rem rgba(0,0,0,0.10);
+}
+
+/* === Focus: keyboard accessibility === */
+button.btn:focus-visible,
+a.btn:focus-visible {
+  outline: 3px solid rgba(13,110,253,0.45); /* Bootstrap blue, visible */
+  outline-offset: 2px;
+}
+
+.nav-link.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none; /* so it doesn't respond to hover or click */
+}
