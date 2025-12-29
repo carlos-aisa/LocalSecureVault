@@ -3,11 +3,11 @@
 # =========================
 
 ## Build results
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-publish/
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
+**/publish/
 
 ## Test results
 [Tt]est[Rr]esult*/
@@ -39,13 +39,13 @@ packages/
 project.lock.json
 project.assets.json
 
-## Build artifacts
-*.dll
-*.pdb
-*.exe
+## Build artifacts (in output directories only)
+[Bb]in/**/*.dll
+[Oo]bj/**/*.pdb
+[Bb]in/**/*.exe
 *.app
-*.deps.json
-*.runtimeconfig.json
+[Bb]in/**/*.deps.json
+[Bb]in/**/*.runtimeconfig.json
 
 # =========================
 # MAUI / Blazor Hybrid (future)
@@ -65,4 +65,4 @@ project.assets.json
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-.DS
+.DS_Store

@@ -6,6 +6,7 @@ using Vault.Crypto;
 using Vault.Storage;
 using Vault.Storage.Serialization;
 using Vault.App.Platform;
+using Vault.App.Services;
 
 namespace Vault.App;
 
@@ -36,6 +37,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AppState>();
 		builder.Services.AddSingleton<MarkdownVaultImporter>();
 		builder.Services.AddSingleton<VaultSaveService>();
+		builder.Services.AddSingleton<IVaultFilePicker, MauiVaultFilePicker>();
+		builder.Services.AddSingleton<IRecentVaultPathStore, PreferencesRecentVaultPathStore>();
 
 		return builder.Build();
 	}

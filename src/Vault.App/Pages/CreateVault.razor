@@ -2,11 +2,13 @@
 @using Vault.Application.Abstractions
 @using Vault.Application.Models
 @using Vault.App.Platform
+@using Vault.App.Services;
 @inject IFileDialogService FileDialog
 @inject Vault.Application.Services.VaultCryptoService VaultCrypto
 @inject IVaultStore VaultStore
 @inject AppState State
 @inject NavigationManager Nav
+@inject IRecentVaultPathStore Recent
 
 <h3>Create new vault</h3>
 
@@ -110,6 +112,7 @@
             await VaultStore.WriteAtomicAsync(path, result.File);
 
             State.SetUnlocked(path, doc, result.SessionKey, result.File.Header);
+            Recent.SetLastPath(path);
             Nav.NavigateTo("/vault");
             Success = $"Vault saved: {path}";
         }

@@ -1,0 +1,122 @@
+@using Vault.Application.Abstractions;
+@using Vault.Application.Services;
+
+@page "/open"
+@inject NavigationManager Nav
+@inject AppState State
+@inject VaultCryptoService Crypto
+@inject IVaultStore Store
+@inject Vault.App.Services.IVaultFilePicker Picker
+@inject Vault.App.Services.IRecentVaultPathStore Recent
+
+<h3>Open existing vault</h3>
+
+@if (HasRecent)
+{
+    <div class="mb-3">
+        <button class="btn btn-outline-primary"
+                @onclick="UseLastVault"
+                disabled="@IsBusy">
+            Open last vault
+        </button>
+
+        <div class="form-text">
+            Last opened vault: <code>@RecentPathHint</code>
+        </div>
+    </div>
+}
+
+<div class="mb-3">
+    <label class="form-label">Vault file</label>
+
+    <div style="display:flex; gap:12px;">
+        <input class="form-control" @bind="VaultPath" />
+        <button class="btn btn-outline-secondary" @onclick="BrowseAsync" disabled="@IsBusy">
+            Browse…
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Master password</label>
+    <input type="password" class="form-control" @bind="Password" />
+</div>
+
+<div style="display:flex; gap:12px;">
+    <button class="btn btn-primary" @onclick="OpenAsync" disabled="@(IsBusy || string.IsNullOrWhiteSpace(VaultPath) || string.IsNullOrWhiteSpace(Password))">
+        Open vault
+    </button>
+
+    <button class="btn btn-secondary" @onclick="Cancel" disabled="@IsBusy">
+        Cancel
+    </button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-danger mt-3">@Error</div>
+}
+
+@code {
+    private string VaultPath = "";
+    private string Password = "";
+    private string? Error;
+    private bool IsBusy;
+    private string? RecentPathHint;
+    private bool HasRecent => !string.IsNullOrWhiteSpace(RecentPathHint);
+
+    protected override void OnInitialized()
+    {
+        var last = Recent.GetLastPath();
+        RecentPathHint = last;
+    }
+
+    private async Task BrowseAsync()
+    {
+        Error = null;
+        var picked = await Picker.PickVaultFileAsync();
+
+        if (!string.IsNullOrWhiteSpace(picked))
+            VaultPath = picked;
+    }
+
+    private async Task OpenAsync()
+    {
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            var file = await Store.ReadAsync(VaultPath);
+            var result = Crypto.UnlockVault(file, Password);
+
+            State.SetUnlocked(VaultPath, result.Document, result.SessionKey, file.Header);
+
+            // save last path
+            Recent.SetLastPath(VaultPath);
+
+            Nav.NavigateTo("/vault");
+        }
+        catch (Exception ex)
+        {
+            Error = "Failed to open vault: " + ex.Message;
+            Recent.Clear();
+        }
+        finally
+        {
+            IsBusy = false;
+            Password = "";
+        }
+    }
+
+    private void UseLastVault()
+    {
+        if (!string.IsNullOrWhiteSpace(RecentPathHint))
+        {
+            VaultPath = RecentPathHint;
+            Error = null;
+        }
+    }
+
+    private void Cancel() => Nav.NavigateTo("/");
+}
