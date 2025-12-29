@@ -4,6 +4,7 @@ namespace Vault.Application.Abstractions;
 public enum VaultErrorCode
 {
     InvalidFormat,
+    InvalidPath,
     UnsupportedOrCorrupted,
     AccessDenied,
     FileNotFound,

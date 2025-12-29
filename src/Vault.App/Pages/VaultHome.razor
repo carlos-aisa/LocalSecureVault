@@ -57,20 +57,21 @@ else
     {
         SaveMsg = null;
 
-        try
-        {
-            await Saver.SaveAsync(
-                State.CurrentVaultPath!,
-                State.UnlockedDocument!,
-                State.SessionKey!,
-                State.CurrentHeader!);
+        var res = await Saver.TrySaveAsync(
+            State.CurrentVaultPath!,
+            State.UnlockedDocument!,
+            State.SessionKey!,
+            State.CurrentHeader!);
 
+        if (res.IsSuccess)
+        {
             State.MarkSaved();
             SaveMsg = "Saved successfully.";
         }
-        catch (Exception ex)
+        else
         {
-            SaveMsg = $"Save failed: {ex.Message}";
+            SaveMsg = res.Error!.UserMessage;
+            // Important: NO MarkSaved -> remains Dirty
         }
     }
 }
