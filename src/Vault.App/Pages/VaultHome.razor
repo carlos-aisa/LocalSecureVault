@@ -75,10 +75,11 @@ else
                         
                         @if (e.Tags.Count > 0)
                         {
-                            <div class="small mt-1">
+                            <div class="mt-2">
                                 @foreach (var tag in e.Tags)
                                 {
-                                    <span class="badge bg-secondary me-1">@tag</span>
+                                    <span class="badge bg-secondary me-2" 
+                                          style="padding: 0.5rem 0.75rem; font-size: 0.9rem;">@tag</span>
                                 }
                             </div>
                         }
@@ -110,6 +111,7 @@ else
                 </div>
                 <div class="modal-body">
                     <EntryEditor Model="EditorModel"
+                                 AvailableTags="AllAvailableTags"
                                  OnCancel="CloseEditor"
                                  OnSave="SaveEditor" />
                 </div>
@@ -160,6 +162,21 @@ else
 
     private IReadOnlyList<Vault.Domain.VaultEntry> EntriesFiltered =>
         SearchService.Search(State.UnlockedDocument!, new SearchQuery(Search));
+    
+    private IReadOnlyList<string> AllAvailableTags
+    {
+        get
+        {
+            if (State.UnlockedDocument is null) return Array.Empty<string>();
+            
+            return State.UnlockedDocument.Entries
+                .SelectMany(e => e.Tags)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+    }
+    
     private void GoImport() => Nav.NavigateTo("/import");
 
     private void NewEntry()

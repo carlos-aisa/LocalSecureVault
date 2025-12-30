@@ -47,13 +47,63 @@
         </div>
 
         <div class="col-12">
-            <label class="form-label">Tags (one per line)</label>
-            <textarea class="form-control" rows="3" @bind="Model.TagsText"></textarea>
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" rows="4" @bind="Model.Notes"></textarea>
         </div>
 
         <div class="col-12">
-            <label class="form-label">Notes</label>
-            <textarea class="form-control" rows="4" @bind="Model.Notes"></textarea>
+            <label class="form-label">Tags</label>
+            
+            @* Tags seleccionados actualmente *@
+            @if (SelectedTags.Count > 0)
+            {
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    @foreach (var tag in SelectedTags)
+                    {
+                        <span class="badge bg-primary d-flex align-items-center gap-2" 
+                              style="padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                            @tag
+                            <button type="button" class="btn-close btn-close-white" 
+                                    style="font-size: 0.65rem; padding: 0; width: 14px; height: 14px;"
+                                    @onclick="() => RemoveTag(tag)"
+                                    aria-label="Remove tag"></button>
+                        </span>
+                    }
+                </div>
+            }
+            
+            @* Tags disponibles para seleccionar *@
+            @if (AvailableTags.Count > 0)
+            {
+                var unselectedTags = AvailableTags.Where(t => !SelectedTags.Contains(t, StringComparer.OrdinalIgnoreCase)).ToList();
+                if (unselectedTags.Count > 0)
+                {
+                    <div class="small text-muted mb-2">Available tags:</div>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @foreach (var tag in unselectedTags)
+                        {
+                            <button type="button" 
+                                    class="badge bg-secondary border-0" 
+                                    style="cursor: pointer; padding: 0.5rem 0.75rem; font-size: 0.9rem;"
+                                    @onclick="() => ToggleTag(tag)">+ @tag</button>
+                        }
+                    </div>
+                }
+            }
+            
+            @* Input para crear nuevo tag *@
+            <div class="input-group">
+                <input type="text" 
+                       class="form-control form-control-sm" 
+                       placeholder="Add new tag..."
+                       @bind="NewTagInput"
+                       @bind:event="oninput"
+                       @onkeydown="HandleKeyPress" />
+                <button type="button" 
+                        class="btn btn-sm btn-outline-secondary"
+                        @onclick="AddNewTag"
+                        disabled="@string.IsNullOrWhiteSpace(NewTagInput)">Add</button>
+            </div>
         </div>
     </div>
 
@@ -65,22 +115,67 @@
 
 @code {
     private bool ShowPassword = false;
+    private string NewTagInput = "";
+    private List<string> SelectedTags = new();
+    
     [Parameter] public EntryEditorModel Model { get; set; } = new();
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public IReadOnlyList<string> AvailableTags { get; set; } = Array.Empty<string>();
 
     protected override void OnParametersSet()
     {
         ShowPassword = false;
+        
+        // Inicializar tags seleccionados desde el modelo
+        SelectedTags = Model.TagsText
+            .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => t.Trim())
+            .Where(t => t.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private async Task HandleSave()
     {
+        // Sincronizar tags seleccionados al modelo antes de guardar
+        Model.TagsText = string.Join(Environment.NewLine, SelectedTags);
         await OnSave.InvokeAsync();
     }
     private async Task CopyPasswordAsync()
-{
-    await Clipboard.SetTextAsync(Model.Password ?? "");
-}
+    {
+        await Clipboard.SetTextAsync(Model.Password ?? "");
+    }
+    
+    private void ToggleTag(string tag)
+    {
+        if (SelectedTags.Contains(tag, StringComparer.OrdinalIgnoreCase))
+            SelectedTags.RemoveAll(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase));
+        else
+            SelectedTags.Add(tag);
+    }
+    
+    private void AddNewTag()
+    {
+        var trimmed = NewTagInput.Trim();
+        if (string.IsNullOrEmpty(trimmed)) return;
+        if (SelectedTags.Contains(trimmed, StringComparer.OrdinalIgnoreCase)) return;
+        
+        SelectedTags.Add(trimmed);
+        NewTagInput = "";
+    }
+    
+    private void RemoveTag(string tag)
+    {
+        SelectedTags.RemoveAll(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddNewTag();
+        }
+    }
 }
 
