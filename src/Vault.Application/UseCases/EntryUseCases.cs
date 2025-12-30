@@ -91,8 +91,4 @@ public sealed class EntryUseCases
         => doc.Entries.Any(e =>
             string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(e.Username ?? "", username ?? "", StringComparison.OrdinalIgnoreCase));
-
-    private static bool SameKey(VaultEntry a, VaultEntry b)
-        => string.Equals(a.Name, b.Name, StringComparison.OrdinalIgnoreCase)
-           && string.Equals(a.Username ?? "", b.Username ?? "", StringComparison.OrdinalIgnoreCase);
 }
