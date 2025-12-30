@@ -13,9 +13,9 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(1);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
-        var entry = uc.AddEntry(doc, "GitHub", "pw", nowUtc: t2);
+        var entry = TestHelpers.AddEntry(doc, "GitHub", "pw", nowUtc: t2);
 
         Assert.Single(doc.Entries);
         Assert.Equal(entry.Id, doc.Entries[0].Id);
@@ -29,10 +29,10 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(5);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryUseCases();
-        var entry = uc.AddEntry(doc, "A", "P", nowUtc: t1);
+        // Using TestHelpers
+        var entry = TestHelpers.AddEntry(doc, "A", "P", nowUtc: t1);
 
-        uc.UpdateEntry(doc, entry.Id, "B", "Q", nowUtc: t2);
+        TestHelpers.UpdateEntry(doc, entry.Id, "B", "Q", nowUtc: t2);
 
         Assert.Equal("B", entry.Name);
         Assert.Equal("Q", entry.Password);
@@ -46,10 +46,10 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(3);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryUseCases();
-        var entry = uc.AddEntry(doc, "A", "P", nowUtc: t1);
+        // Using TestHelpers
+        var entry = TestHelpers.AddEntry(doc, "A", "P", nowUtc: t1);
 
-        var removed = uc.DeleteEntry(doc, entry.Id, nowUtc: t2);
+        var removed = TestHelpers.DeleteEntry(doc, entry.Id, nowUtc: t2);
 
         Assert.True(removed);
         Assert.Empty(doc.Entries);

@@ -1,54 +1,249 @@
 @using Vault.Application.Services;
+@using Vault.App.Services;
 
 @page "/vault"
 @inject AppState State
-@inject VaultSaveService Saver
 @inject NavigationManager Nav
+@inject VaultAppService App
+@inject SearchService SearchService
 
-@if (!State.IsUnlocked)
+@inject ClipboardService Clipboard
+
+<h3>Vault</h3>
+
+@if (State.UnlockedDocument is null)
 {
     <div class="alert alert-warning">
-        Vault is locked. Go back to <a href="/">Welcome</a>.
+        Vault is locked. <a href="/open">Open a vault</a>.
     </div>
+    return;
+}
+
+<div class="d-flex gap-2 mb-3">
+    <button class="btn btn-primary" @onclick="NewEntry">Add entry</button>
+    <button class="btn btn-outline-secondary" @onclick="GoImport">Import</button>
+    <button class="btn btn-outline-danger" @onclick="LockVault">Lock</button>
+    <button class="btn btn-success" @onclick="SaveAsync" disabled="@(!State.IsDirty || IsBusy)">Save</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(SaveMsg))
+{
+    <div class="alert alert-success mt-3">@SaveMsg</div>
+}
+
+<div class="mb-2">
+    <input class="form-control" placeholder="Search (name / username / tags)…"
+           @bind="Search" @bind:event="oninput" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-danger">@Error</div>
+}
+
+@if (EntriesFiltered.Count == 0)
+{
+    <div class="text-muted">No entries.</div>
 }
 else
 {
-    <h3>Vault</h3>
-    <p><b>Path:</b> @State.CurrentVaultPath</p>
-    <p><b>Name:</b> @State.UnlockedDocument!.Meta.VaultName</p>
-
-    <div style="display:flex; gap:12px; margin-bottom:12px;">
-        <button class="btn btn-secondary" @onclick="Lock">Lock</button>
-
-       <button class="btn btn-outline-primary" @onclick="GoImport">
-            Import (Markdown)
-        </button>
-
-        <button class="btn btn-primary"
-                disabled="@(!State.IsDirty)"
-                @onclick="SaveAsync">
-            Save
-        </button>
-
-        <button class="btn btn-primary" disabled>Add entry (next)</button>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Name</th>
+                    <th style="width: 25%;">Username</th>
+                    <th style="width: 25%;">Tags</th>
+                    <th style="width: 20%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var e in EntriesFiltered)
+            {
+                <tr>
+                    <td>
+                        <strong>@e.Name</strong>
+                        @if (!string.IsNullOrWhiteSpace(e.Url))
+                        {
+                            <div class="small text-muted">@e.Url</div>
+                        }
+                    </td>
+                    <td>@(e.Username ?? "")</td>
+                    <td class="small">
+                        @if (e.Tags.Count > 0)
+                        {
+                            @string.Join(" / ", e.Tags)
+                        }
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditEntry(e.Id)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(e.Id)">Delete</button>
+                        <button class="btn btn-sm btn-outline-secondary me-2" @onclick="() => CopyPasswordAsync(e.Id)">@(CopiedId == e.Id ? "Copied" : "Copy")</button>                    
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
     </div>
-    @if (!string.IsNullOrWhiteSpace(SaveMsg))
-    {
-        <div class="alert alert-info">@SaveMsg</div>
-    }
+}
+
+@if (EditorOpen)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@EditorTitle</h5>
+                    <button type="button" class="btn-close" @onclick="CloseEditor"></button>
+                </div>
+                <div class="modal-body">
+                    <EntryEditor Model="EditorModel"
+                                 OnCancel="CloseEditor"
+                                 OnSave="SaveEditor" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (DeleteOpen)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete entry</h5>
+                    <button type="button" class="btn-close" @onclick="CloseDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong>@DeleteName</strong>?</p>
+                    <p class="text-muted small mb-0">This only removes it from memory. Use Save to persist.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseDelete">Cancel</button>
+                    <button class="btn btn-danger" @onclick="DeleteNow">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
-    private string? SaveMsg;
-    private void GoImport() => Nav.NavigateTo("import");
+    private string? Error;
+    private string Search = "";
 
-    protected override void OnInitialized()
+    private bool EditorOpen;
+    private Guid? EditingId;
+    private EntryEditorModel EditorModel = new();
+    private string EditorTitle => EditingId is null ? "Add entry" : "Edit entry";
+
+    private bool DeleteOpen;
+    private Guid DeleteId;
+    private string DeleteName = "";
+    private bool IsBusy;
+    private string? SaveMsg;
+    private Guid? CopiedId;
+    private CancellationTokenSource? _copyCts;
+
+    private IReadOnlyList<Vault.Domain.VaultEntry> EntriesFiltered =>
+        SearchService.Search(State.UnlockedDocument!, new SearchQuery(Search));
+    private void GoImport() => Nav.NavigateTo("/import");
+
+    private void NewEntry()
     {
-        if (!State.IsUnlocked)
-            Nav.NavigateTo("/open", replace: true);
+        Error = null;
+        EditingId = null;
+        EditorModel = EntryEditorModel.FromEntry(null);
+        EditorOpen = true;
     }
-    private void Lock()
+
+    private void EditEntry(Guid id)
     {
+        Error = null;
+        var e = State.UnlockedDocument!.GetEntry(id);
+        EditingId = id;
+        EditorModel = EntryEditorModel.FromEntry(e);
+        EditorOpen = true;
+    }
+
+    private void CloseEditor()
+    {
+        EditorOpen = false;
+        EditingId = null;
+    }
+
+    private void SaveEditor()
+    {
+        Error = null;
+
+        try
+        {
+            if (EditingId is null)
+            {
+                var entry = EditorModel.ToNewEntry();
+                var res = App.AddEntry(State.UnlockedDocument!, entry);
+                if (!res.IsSuccess) { Error = res.Error!.UserMessage; return; }
+            }
+            else
+            {
+                var data = EditorModel.ToUpdateData();
+                var res = App.UpdateEntry(
+                    State.UnlockedDocument!,
+                    EditingId.Value,
+                    data.Name,
+                    data.Password,
+                    data.Username,
+                    data.Url,
+                    data.Notes,
+                    data.Tags);
+
+                if (!res.IsSuccess) { Error = res.Error!.UserMessage; return; }
+            }
+            State.MarkDirty();
+            CloseEditor();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    private void ConfirmDelete(Guid id)
+    {
+        Error = null;
+        var e = State.UnlockedDocument!.GetEntry(id);
+        DeleteId = id;
+        DeleteName = e.Name;
+        DeleteOpen = true;
+    }
+
+    private void CloseDelete()
+    {
+        DeleteOpen = false;
+        DeleteId = Guid.Empty;
+        DeleteName = "";
+    }
+
+    private void DeleteNow()
+    {
+        Error = null;
+        var res = App.DeleteEntry(State.UnlockedDocument!, DeleteId);
+        if (!res.IsSuccess) { Error = res.Error!.UserMessage; return; }
+
+        State.MarkDirty();
+        CloseDelete();
+    }
+
+    private void LockVault()
+    {
+        if (State.IsDirty)
+        {
+            Error = "You have unsaved changes. Save before locking.";
+            return;
+        }
+
         State.Lock();
         Nav.NavigateTo("/");
     }
@@ -56,22 +251,49 @@ else
     private async Task SaveAsync()
     {
         SaveMsg = null;
+        Error = null;
+        IsBusy = true;
 
-        var res = await Saver.TrySaveAsync(
-            State.CurrentVaultPath!,
-            State.UnlockedDocument!,
-            State.SessionKey!,
-            State.CurrentHeader!);
-
-        if (res.IsSuccess)
+        try
         {
+            var res = await App.SaveAsync(
+                State.CurrentVaultPath!,
+                State.UnlockedDocument!,
+                State.SessionKey!,
+                State.CurrentHeader!);
+
+            if (!res.IsSuccess)
+            {
+                Error = res.Error!.UserMessage;
+                return;
+            }
+
             State.MarkSaved();
             SaveMsg = "Saved successfully.";
         }
-        else
+        finally
         {
-            SaveMsg = res.Error!.UserMessage;
-            // Important: NO MarkSaved -> remains Dirty
+            IsBusy = false;
         }
+    }
+    private async Task CopyPasswordAsync(Guid id)
+    {
+        Error = null;
+
+        var e = State.UnlockedDocument!.GetEntry(id);
+
+        await Clipboard.SetTextAsync(e.Password);
+
+        CopiedId = id;
+
+        _copyCts?.Cancel();
+        _copyCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(1200, _copyCts.Token);
+            if (CopiedId == id) CopiedId = null;
+        }
+        catch (TaskCanceledException) { }
     }
 }

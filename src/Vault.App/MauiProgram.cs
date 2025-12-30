@@ -2,6 +2,7 @@
 using Vault.Application.Abstractions;
 using Vault.Application.Services;
 using Vault.Application.Import.Markdown;
+using Vault.Application.UseCases;
 using Vault.Crypto;
 using Vault.Storage;
 using Vault.Storage.Serialization;
@@ -36,11 +37,14 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IVaultCryptoService, VaultCryptoService>();
 		builder.Services.AddSingleton<IVaultFilePicker, MauiVaultFilePicker>();
 		builder.Services.AddSingleton<IRecentVaultPathStore, PreferencesRecentVaultPathStore>();
+		builder.Services.AddSingleton<Services.ClipboardService>();
 		builder.Services.AddSingleton<AppState>();
 		builder.Services.AddSingleton<MarkdownVaultImporter>();
 		builder.Services.AddSingleton<VaultSaveService>();
 		builder.Services.AddSingleton<VaultImportService>();
+		builder.Services.AddSingleton<EntryUseCases>();
 		builder.Services.AddSingleton<VaultAppService>();
+		builder.Services.AddSingleton<SearchService>();
 
 		return builder.Build();
 	}

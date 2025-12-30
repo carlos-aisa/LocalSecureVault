@@ -132,7 +132,6 @@ JSON format (MVP):
   - URL
   - Notes
   - Tags
-  - Dates
 
 ---
 
@@ -184,11 +183,11 @@ JSON format (MVP):
 
 ### Phase 4 – UI (Blazor Hybrid)
 
-- [ ] Unlock screen
-- [ ] List and search
-- [ ] Entry editing
+- [x] Unlock screen
+- [x] List and search
+- [x] Entry editing
 - [ ] Copy password
-- [ ] Lock management
+- [x] Lock management
 
 ### Phase 4.5 – Importers
 

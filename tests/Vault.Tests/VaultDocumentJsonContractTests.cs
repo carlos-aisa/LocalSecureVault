@@ -14,8 +14,8 @@ public class VaultDocumentJsonContractTests
         var t1 = new DateTimeOffset(2025, 12, 15, 10, 0, 0, TimeSpan.Zero);
 
         var doc = VaultDocument.CreateNew("Personal", nowUtc: t1);
-        var uc = new EntryUseCases();
-        uc.AddEntry(doc, "GitHub", "pw", username: "carlos", url: "https://github.com", tags: new[] { "dev" }, nowUtc: t1);
+        // Using TestHelpers
+        TestHelpers.AddEntry(doc, "GitHub", "pw", username: "carlos", url: "https://github.com", tags: new[] { "dev" }, nowUtc: t1);
 
         var serializer = new VaultDocumentSerializer();
         var json = serializer.SerializeToString(doc);

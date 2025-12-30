@@ -12,19 +12,19 @@ public class EntryUseCasesEdgeCasesTests
     [Fact]
     public void AddEntry_WithNullDocument_ThrowsArgumentNullException()
     {
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
         Assert.Throws<ArgumentNullException>(() => 
-            uc.AddEntry(null!, "GitHub", "pw"));
+            TestHelpers.AddEntry(null!, "GitHub", "pw"));
     }
 
     [Fact]
     public void AddEntry_ReturnsCreatedEntry()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
-        var entry = uc.AddEntry(doc, "GitHub", "pw", username: "carlos");
+        var entry = TestHelpers.AddEntry(doc, "GitHub", "pw", username: "carlos");
 
         Assert.NotNull(entry);
         Assert.NotEqual(Guid.Empty, entry.Id);
@@ -37,10 +37,10 @@ public class EntryUseCasesEdgeCasesTests
     public void AddEntry_WithAllOptionalFields_CreatesFullEntry()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
         var now = new DateTimeOffset(2025, 12, 15, 0, 0, 0, TimeSpan.Zero);
 
-        var entry = uc.AddEntry(
+        var entry = TestHelpers.AddEntry(
             doc, 
             "GitHub", 
             "pw123",
@@ -62,20 +62,20 @@ public class EntryUseCasesEdgeCasesTests
     [Fact]
     public void UpdateEntry_WithNullDocument_ThrowsArgumentNullException()
     {
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
         Assert.Throws<ArgumentNullException>(() => 
-            uc.UpdateEntry(null!, Guid.NewGuid(), "GitHub", "pw"));
+            TestHelpers.UpdateEntry(null!, Guid.NewGuid(), "GitHub", "pw"));
     }
 
     [Fact]
     public void UpdateEntry_WithNonExistentId_ThrowsKeyNotFoundException()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
         Assert.Throws<KeyNotFoundException>(() =>
-            uc.UpdateEntry(doc, Guid.NewGuid(), "GitHub", "pw"));
+            TestHelpers.UpdateEntry(doc, Guid.NewGuid(), "GitHub", "pw"));
     }
 
     [Fact]
@@ -85,13 +85,13 @@ public class EntryUseCasesEdgeCasesTests
         var t2 = t1.AddMinutes(10);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryUseCases();
+        // Using TestHelpers
         
-        var entry = uc.AddEntry(doc, "GitHub", "oldpw", nowUtc: t1);
+        var entry = TestHelpers.AddEntry(doc, "GitHub", "oldpw", nowUtc: t1);
         var originalId = entry.Id;
         var originalCreated = entry.CreatedUtc;
 
-        uc.UpdateEntry(
+        TestHelpers.UpdateEntry(
             doc, 
             entry.Id, 
             "GitHub Updated", 
@@ -111,19 +111,19 @@ public class EntryUseCasesEdgeCasesTests
     [Fact]
     public void DeleteEntry_WithNullDocument_ThrowsArgumentNullException()
     {
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
         Assert.Throws<ArgumentNullException>(() => 
-            uc.DeleteEntry(null!, Guid.NewGuid()));
+            TestHelpers.DeleteEntry(null!, Guid.NewGuid()));
     }
 
     [Fact]
     public void DeleteEntry_WithNonExistentId_ReturnsFalse()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
-        var result = uc.DeleteEntry(doc, Guid.NewGuid());
+        var result = TestHelpers.DeleteEntry(doc, Guid.NewGuid());
 
         Assert.False(result);
     }
@@ -132,12 +132,12 @@ public class EntryUseCasesEdgeCasesTests
     public void DeleteEntry_RemovesEntryAndReturnsTrue()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
         
-        var entry = uc.AddEntry(doc, "GitHub", "pw");
+        var entry = TestHelpers.AddEntry(doc, "GitHub", "pw");
         Assert.Single(doc.Entries);
 
-        var result = uc.DeleteEntry(doc, entry.Id);
+        var result = TestHelpers.DeleteEntry(doc, entry.Id);
 
         Assert.True(result);
         Assert.Empty(doc.Entries);
@@ -150,11 +150,11 @@ public class EntryUseCasesEdgeCasesTests
         var t2 = t1.AddMinutes(5);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        var uc = new EntryUseCases();
+        // Using TestHelpers
         
-        var entry = uc.AddEntry(doc, "GitHub", "pw", nowUtc: t1);
+        var entry = TestHelpers.AddEntry(doc, "GitHub", "pw", nowUtc: t1);
 
-        uc.DeleteEntry(doc, entry.Id, nowUtc: t2);
+        TestHelpers.DeleteEntry(doc, entry.Id, nowUtc: t2);
 
         Assert.Equal(t2, doc.Meta.UpdatedUtc);
     }
@@ -163,11 +163,11 @@ public class EntryUseCasesEdgeCasesTests
     public void AddEntry_MultipleEntries_AllAddedSuccessfully()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
-        var e1 = uc.AddEntry(doc, "GitHub", "pw1");
-        var e2 = uc.AddEntry(doc, "GitLab", "pw2");
-        var e3 = uc.AddEntry(doc, "Bitbucket", "pw3");
+        var e1 = TestHelpers.AddEntry(doc, "GitHub", "pw1");
+        var e2 = TestHelpers.AddEntry(doc, "GitLab", "pw2");
+        var e3 = TestHelpers.AddEntry(doc, "Bitbucket", "pw3");
 
         Assert.Equal(3, doc.Entries.Count);
         Assert.Contains(doc.Entries, e => e.Id == e1.Id);
@@ -179,9 +179,9 @@ public class EntryUseCasesEdgeCasesTests
     public void UpdateEntry_CanClearOptionalFields()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
         
-        var entry = uc.AddEntry(
+        var entry = TestHelpers.AddEntry(
             doc, 
             "GitHub", 
             "pw",
@@ -191,7 +191,7 @@ public class EntryUseCasesEdgeCasesTests
             tags: new[] { "dev" });
 
         // Clear all optional fields
-        uc.UpdateEntry(
+        TestHelpers.UpdateEntry(
             doc,
             entry.Id,
             "GitHub",

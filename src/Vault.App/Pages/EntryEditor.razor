@@ -1,0 +1,86 @@
+@using System.ComponentModel.DataAnnotations
+@using Vault.Domain
+@using Vault.App.Services;
+
+@inject ClipboardService Clipboard
+
+<EditForm Model="Model" OnValidSubmit="HandleSave">
+    <DataAnnotationsValidator />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Name *</label>
+            <InputText class="form-control" @bind-Value="Model.Name" />
+            <ValidationMessage For="() => Model.Name" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Username</label>
+            <InputText class="form-control" @bind-Value="Model.Username" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Password *</label>
+
+            <div class="input-group">
+                <InputText class="form-control"
+                        type="@(ShowPassword ? "text" : "password")"
+                        @bind-Value="Model.Password" />
+
+                <button type="button" class="btn btn-outline-secondary"
+                        @onclick="() => ShowPassword = !ShowPassword">
+                    @(ShowPassword ? "Hide" : "Show")
+                </button>
+                <button type="button" class="btn btn-outline-secondary"
+                        @onclick="CopyPasswordAsync"
+                        disabled="@string.IsNullOrEmpty(Model.Password)">
+                    Copy
+                </button>
+            </div>
+
+            <ValidationMessage For="() => Model.Password" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">URL</label>
+            <InputText class="form-control" @bind-Value="Model.Url" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Tags (one per line)</label>
+            <textarea class="form-control" rows="3" @bind="Model.TagsText"></textarea>
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" rows="4" @bind="Model.Notes"></textarea>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end mt-3">
+        <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</EditForm>
+
+@code {
+    private bool ShowPassword = false;
+    [Parameter] public EntryEditorModel Model { get; set; } = new();
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        ShowPassword = false;
+    }
+
+    private async Task HandleSave()
+    {
+        await OnSave.InvokeAsync();
+    }
+    private async Task CopyPasswordAsync()
+{
+    await Clipboard.SetTextAsync(Model.Password ?? "");
+}
+}
+

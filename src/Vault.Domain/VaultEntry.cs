@@ -82,7 +82,7 @@ public sealed class VaultEntry
         UpdatedUtc = now;
     }
 
-    internal static VaultEntry Rehydrate(
+    public static VaultEntry Rehydrate(
         Guid id,
         string name,
         string password,

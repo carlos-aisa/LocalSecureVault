@@ -10,6 +10,7 @@ using Vault.Application.Import.Models;
 using Vault.Application.Models;
 using Vault.Application.Services;
 using Vault.Application.UseCases;
+using Vault.Tests;
 using Xunit;
 
 namespace Vault.Application.Tests.Services;
@@ -56,10 +57,10 @@ public sealed class VaultAppServiceImportTests
     {
         var svc = CreateSut();
         var doc = VaultDocument.CreateNew("Test Vault");
-        var uc = new EntryUseCases();
+        // Using TestHelpers
         
         // Add existing entry
-        uc.AddEntry(doc, "GitHub", "oldpass", username: "carlos", tags: new[] { "Work" });
+        TestHelpers.AddEntry(doc, "GitHub", "oldpass", username: "carlos", tags: new[] { "Work" });
 
         var markdown = """
         # Work
@@ -147,8 +148,9 @@ public sealed class VaultAppServiceImportTests
         var crypto = new FakeCrypto();
         var saver = new FakeSaver();
         var import = new VaultImportService(new MarkdownVaultImporter());
+        var entries = new EntryUseCases();
 
-        return new VaultAppService(store, crypto, saver, import);
+        return new VaultAppService(store, crypto, saver, import, entries);
     }
 
     private sealed class FakeStore : IVaultStore

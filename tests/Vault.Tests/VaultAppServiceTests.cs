@@ -80,8 +80,9 @@ public sealed class VaultAppServiceOpenTests
         // No usados por OpenAsync, pero requeridos por el constructor:
         var saver = new FakeSaver();
         var import = new FakeImportService();
+        var entries = new EntryUseCases();
 
-        return new VaultAppService(store, crypto, saver, import);
+        return new VaultAppService(store, crypto, saver, import, entries);
     }
 
     private sealed class FakeStore : IVaultStore

@@ -3,6 +3,8 @@ using Vault.Application.Models;
 using System.Security.Cryptography;
 using Vault.Application.Import.Models;
 using Vault.Application.Import;
+using Vault.Application.UseCases;
+using Vault.Domain;
 
 namespace Vault.Application.Services;
 
@@ -12,13 +14,15 @@ public sealed class VaultAppService
     private readonly IVaultCryptoService _crypto;
     private readonly VaultSaveService _saver;
     private readonly VaultImportService _import;
+    private readonly EntryUseCases _entries;
 
-    public VaultAppService(IVaultStore store, IVaultCryptoService crypto, VaultSaveService saver, VaultImportService import)
+    public VaultAppService(IVaultStore store, IVaultCryptoService crypto, VaultSaveService saver, VaultImportService import, EntryUseCases entries)
     {
         _store = store;
         _crypto = crypto;
         _saver = saver;
         _import = import;
+        _entries = entries;
     }
 
     public async Task<VaultResult<UnlockedVault>> OpenAsync(string path, ReadOnlyMemory<char> password)
@@ -150,7 +154,26 @@ public sealed class VaultAppService
                     ImportApplyPlan plan,
                     DateTimeOffset? nowUtc = null)
         => _import.Apply(document, plan, nowUtc);
-}
+
+    public VaultResult<Guid> AddEntry(VaultDocument doc, VaultEntry entry, DateTimeOffset? nowUtc = null)
+    => _entries.Add(doc, entry, nowUtc);
+
+    public VaultResult<Unit> UpdateEntry(
+        VaultDocument doc,
+        Guid id,
+        string name,
+        string password,
+        string? username,
+        string? url,
+        string? notes,
+        IReadOnlyList<string> tags,
+        DateTimeOffset? nowUtc = null)
+        => _entries.Update(doc, id, name, password, username, url, notes, tags, nowUtc);
+        
+        public VaultResult<Unit> DeleteEntry(VaultDocument doc, Guid id, DateTimeOffset? nowUtc = null)
+            => _entries.Delete(doc, id, nowUtc);
+    }
+    
 
 // CreateInMemory Result. (UI use it for State.SetUnlocked after save)
 public sealed record CreatedVault(

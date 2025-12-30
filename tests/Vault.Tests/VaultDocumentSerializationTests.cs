@@ -14,10 +14,10 @@ public class VaultDocumentSerializationTests
         var t2 = t1.AddMinutes(1);
 
         var doc = VaultDocument.CreateNew("Personal", nowUtc: t1);
-        var uc = new EntryUseCases();
+        // Using TestHelpers
 
-        var e1 = uc.AddEntry(doc, "GitHub", "pw1", username: "carlos", url: "https://github.com", notes: "work", tags: new[] { "Dev", " " }, nowUtc: t2);
-        var e2 = uc.AddEntry(doc, "Bank", "pw2", username: "me", url: "https://bank.local", notes: "money", tags: new[] { "Finance" }, nowUtc: t2);
+        var e1 = TestHelpers.AddEntry(doc, "GitHub", "pw1", username: "carlos", url: "https://github.com", notes: "work", tags: new[] { "Dev", " " }, nowUtc: t2);
+        var e2 = TestHelpers.AddEntry(doc, "Bank", "pw2", username: "me", url: "https://bank.local", notes: "money", tags: new[] { "Finance" }, nowUtc: t2);
 
         var serializer = new VaultDocumentSerializer();
 
