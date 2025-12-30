@@ -9,7 +9,18 @@
 
 @inject ClipboardService Clipboard
 
-<h3>Vault</h3>
+@* HEADER - Título y acciones globales *@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Vault</h3>
+    
+    @if (State.UnlockedDocument is not null)
+    {
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" @onclick="SaveAsync" disabled="@(!State.IsDirty || IsBusy)">Save</button>
+            <button class="btn btn-outline-danger" @onclick="LockVault">Lock</button>
+        </div>
+    }
+</div>
 
 @if (State.UnlockedDocument is null)
 {
@@ -19,21 +30,21 @@
     return;
 }
 
-<div class="d-flex gap-2 mb-3">
-    <button class="btn btn-primary" @onclick="NewEntry">Add entry</button>
-    <button class="btn btn-outline-secondary" @onclick="GoImport">Import</button>
-    <button class="btn btn-outline-danger" @onclick="LockVault">Lock</button>
-    <button class="btn btn-success" @onclick="SaveAsync" disabled="@(!State.IsDirty || IsBusy)">Save</button>
-</div>
-
 @if (!string.IsNullOrWhiteSpace(SaveMsg))
 {
-    <div class="alert alert-success mt-3">@SaveMsg</div>
+    <div class="alert alert-success">@SaveMsg</div>
 }
 
-<div class="mb-2">
-    <input class="form-control" placeholder="Search (name / username / tags)…"
+@* CONTROLES - Búsqueda y acciones de entrada *@
+<div class="d-flex gap-3 mb-3 align-items-center">
+    <input class="form-control" placeholder="Search entries..." 
+           style="flex: 1;"
            @bind="Search" @bind:event="oninput" />
+    
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" @onclick="NewEntry">Add Entry</button>
+        <button class="btn btn-outline-secondary" @onclick="GoImport">Import</button>
+    </div>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Error))
@@ -41,49 +52,49 @@
     <div class="alert alert-danger">@Error</div>
 }
 
+@* LISTADO DE ENTRADAS - Formato tarjeta *@
 @if (EntriesFiltered.Count == 0)
 {
     <div class="text-muted">No entries.</div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th style="width: 30%;">Name</th>
-                    <th style="width: 25%;">Username</th>
-                    <th style="width: 25%;">Tags</th>
-                    <th style="width: 20%;"></th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var e in EntriesFiltered)
-            {
-                <tr>
-                    <td>
-                        <strong>@e.Name</strong>
-                        @if (!string.IsNullOrWhiteSpace(e.Url))
+    <div class="d-flex flex-column gap-2">
+        @foreach (var e in EntriesFiltered)
+        {
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center py-3">
+                    @* Información de la entrada *@
+                    <div class="d-flex flex-column">
+                        <div class="fw-bold">@e.Name</div>
+                        
+                        @if (!string.IsNullOrWhiteSpace(e.Username))
                         {
-                            <div class="small text-muted">@e.Url</div>
+                            <div class="text-muted small">@e.Username</div>
                         }
-                    </td>
-                    <td>@(e.Username ?? "")</td>
-                    <td class="small">
+                        
                         @if (e.Tags.Count > 0)
                         {
-                            @string.Join(" / ", e.Tags)
+                            <div class="small mt-1">
+                                @foreach (var tag in e.Tags)
+                                {
+                                    <span class="badge bg-secondary me-1">@tag</span>
+                                }
+                            </div>
                         }
-                    </td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditEntry(e.Id)">Edit</button>
+                    </div>
+                    
+                    @* Acciones *@
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyPasswordAsync(e.Id)">
+                            @(CopiedId == e.Id ? "Copied" : "Copy")
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(e.Id)">Edit</button>
                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(e.Id)">Delete</button>
-                        <button class="btn btn-sm btn-outline-secondary me-2" @onclick="() => CopyPasswordAsync(e.Id)">@(CopiedId == e.Id ? "Copied" : "Copy")</button>                    
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 }
 
