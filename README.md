@@ -1,72 +1,72 @@
 # Local Secure Vault (LSV)
 
-## Descripción
+## Description
 
-**Local Secure Vault** es una aplicación local para Windows destinada a la gestión segura de credenciales y secretos (usuarios, contraseñas, URLs, notas, etc.).
+**Local Secure Vault** is a local Windows application designed for the secure management of credentials and secrets (users, passwords, URLs, notes, etc.).
 
-El objetivo principal del proyecto es sustituir el uso de ficheros en texto plano (por ejemplo Markdown) por una solución **segura, cifrada y offline**, que permita realizar copias de seguridad y restaurarlas incluso en otros equipos.
+The main goal of the project is to replace the use of plain text files (for example Markdown) with a **secure, encrypted, and offline** solution that allows backups and restores even on other devices.
 
-No existe ningún servidor, backend ni servicio cloud:  
-todo se ejecuta **exclusivamente en el equipo local del usuario**.
-
----
-
-## Objetivos principales
-
-- Almacenar toda la información **siempre cifrada en reposo**
-- Acceso protegido mediante **una master password** (nunca almacenada)
-- Diseño moderno basado en buenas prácticas de seguridad:
-  - Derivación de clave con Argon2id
-  - Cifrado simétrico con AES-GCM
-  - Protección de integridad y autenticación de datos
-- Un único fichero cifrado fácil de respaldar
-- Restauración posible en otros equipos
-- Aplicación 100% local para Windows
-- Interfaz moderna basada en **Blazor Hybrid**
+There is no server, backend, or cloud service:  
+everything runs **exclusively on the user's local machine**.
 
 ---
 
-## Qué NO es este proyecto
+## Main Objectives  
 
-- No es un gestor de contraseñas cloud
-- No sincroniza datos
-- No pretende competir con Bitwarden, 1Password, etc.
-- No protege contra malware activo en el sistema
-
-Es una **bóveda personal local**, segura y controlada por el usuario.
+- Store all information **always encrypted at rest**
+- Access protected by a **master password** (never stored)
+- Modern design based on good security practices:
+  - Key derivation with Argon2id
+  - Symmetric encryption with AES-GCM
+  - Data integrity and authentication protection
+- A single encrypted file easy to back up
+- Restore possible on other devices
+- 100% local application for Windows
+- Modern interface based on **Blazor Hybrid**
 
 ---
 
-## Funcionalidad (MVP)
+## What this project is NOT
 
-- Crear una bóveda nueva (fichero cifrado)
-- Abrir y desbloquear una bóveda existente
-- CRUD de entradas:
-  - Nombre
-  - Usuario
+- It is not a cloud password manager
+- It does not sync data
+- It does not aim to compete with Bitwarden, 1Password, etc.
+- It does not protect against active malware on the system
+
+It is a **local personal vault**, secure and controlled by the user.
+
+---
+
+## Functionality (MVP)  
+
+- Create a new vault (encrypted file)
+- Open and unlock an existing vault
+- CRUD entries:
+  - Name
+  - Username
   - Password
   - URL
-  - Notas
+  - Notes
   - Tags
-- Búsqueda rápida
-- Copiar contraseña al portapapeles con auto-borrado
-- Auto-bloqueo tras inactividad
+- Quick search
+- Copy password to clipboard with auto-clear
+- Auto-lock after inactivity
 
 ---
 
-## Tecnologías principales
+## Main Technologies
 
 - .NET (>= 8)
 - Blazor Hybrid (MAUI)
-- Argon2id (derivación de claves)
-- AES-GCM (cifrado autenticado)
-- JSON (payload interno, MVP)
+- Argon2id (key derivation)
+- AES-GCM (authenticated encryption)
+- JSON (internal payload, MVP)
 
 ---
 
-## Estado del proyecto
+## Project Status
 
-🚧 En fase de **diseño y arquitectura**  
-No se ha escrito código todavía.
+🚧 In the **design and architecture** phase  
+No code has been written yet.
 
-La documentación de arquitectura y el plan de implementación se encuentran en `arch.md`.
+The architecture documentation and implementation plan are located in `arch.md`.

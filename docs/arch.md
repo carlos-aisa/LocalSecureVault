@@ -186,7 +186,7 @@ JSON format (MVP):
 - [x] Unlock screen
 - [x] List and search
 - [x] Entry editing
-- [ ] Copy password
+- [x] Copy password
 - [x] Lock management
 
 ### Phase 4.5 – Importers
@@ -199,8 +199,8 @@ JSON format (MVP):
 
 ### Phase 5 – Sensitive Services
 
-- [ ] Clipboard with auto-clear
-- [ ] Auto-lock on inactivity
+- [x] Clipboard with auto-clear
+- [x] Auto-lock on inactivity
 
 ---
 

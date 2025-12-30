@@ -108,4 +108,20 @@ public class CryptoProviderTests
 
         Assert.NotEqual(b1.Nonce, b2.Nonce);
     }
+
+    [Fact]
+    public void Decrypt_TamperedTag_Fails()
+    {
+        var crypto = new CryptoProvider();
+        var key = RandomNumberGenerator.GetBytes(32);
+        var aad = new byte[] { 5, 5, 5 };
+        var plaintext = new byte[] { 1, 2, 3, 4, 5 };
+
+        var blob = crypto.Encrypt(plaintext, aad, key);
+
+        // Tamper with the authentication tag
+        blob.Tag[0] ^= 0xFF;
+
+        Assert.ThrowsAny<CryptographicException>(() => crypto.Decrypt(blob, aad, key));
+    }
 }
