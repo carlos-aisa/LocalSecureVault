@@ -1,4 +1,8 @@
-﻿@inherits LayoutComponentBase
+﻿@inject Vault.App.Services.InactivityMonitor Idle
+@inject AppState State
+@inject NavigationManager Nav
+
+@inherits LayoutComponentBase
 
 <div class="page">
 	<div class="sidebar">
@@ -9,9 +13,96 @@
 		<div class="top-row px-4">
 			<a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
 		</div>
-
-		<article class="content px-4">
-			@Body
-		</article>
+		<div @onmousemove="OnUserActivity"
+			@onkeydown="OnUserActivity"
+			@onclick="OnUserActivity"
+			@ontouchstart="OnUserActivity"
+			tabindex="0"
+			style="outline:none;">
+			<article class="content px-4">
+				@Body
+			</article>
+		</div>
 	</main>
 </div>
+@if (ShowIdleLockModal)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Lock vault</h5>
+                    <button type="button" class="btn-close" @onclick="CancelIdleLock"></button>
+                </div>
+                <div class="modal-body">
+                    <p>No activity detected. You have unsaved changes.</p>
+                    <p class="text-muted small mb-0">Locking will discard changes in memory.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CancelIdleLock">Cancel</button>
+                    <button class="btn btn-danger" @onclick="ConfirmIdleLock">Lock anyway</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool ShowIdleLockModal;
+
+    protected override void OnInitialized()
+    {
+        // 10 min por defecto (ajústalo aquí)
+        Idle.Configure(TimeSpan.FromMinutes(1), OnIdleTimeoutAsync);
+        Idle.NotifyActivity();
+        Idle.Start();
+    }
+
+    private void OnUserActivity()
+    {
+        // Si el usuario está interactuando, reseteamos el reloj.
+        Idle.NotifyActivity();
+    }
+
+    private Task OnIdleTimeoutAsync()
+    {
+        // Solo si hay vault unlocked
+        if (State.UnlockedDocument is null)
+            return Task.CompletedTask;
+
+        // Si está dirty -> pedir confirmación
+        if (State.IsDirty)
+        {
+            ShowIdleLockModal = true;
+            StateHasChanged();
+            return Task.CompletedTask;
+        }
+
+        DoLock();
+        return Task.CompletedTask;
+    }
+
+    private void CancelIdleLock()
+    {
+        ShowIdleLockModal = false;
+        Idle.NotifyActivity(); // resetea contador al cancelar
+    }
+
+    private void ConfirmIdleLock()
+    {
+        ShowIdleLockModal = false;
+        DoLock();
+    }
+
+    private void DoLock()
+    {
+        State.Lock();
+        Nav.NavigateTo("/open");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Idle.DisposeAsync();
+    }
+}

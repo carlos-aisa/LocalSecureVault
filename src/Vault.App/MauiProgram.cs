@@ -45,6 +45,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<EntryUseCases>();
 		builder.Services.AddSingleton<VaultAppService>();
 		builder.Services.AddSingleton<SearchService>();
+		builder.Services.AddScoped<InactivityMonitor>();
+
 
 		return builder.Build();
 	}
