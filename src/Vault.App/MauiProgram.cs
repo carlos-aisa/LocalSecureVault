@@ -31,6 +31,14 @@ public static class MauiProgram
 #if WINDOWS
 		builder.Services.AddSingleton<IFileDialogService, WindowsFileDialogService>();
 #endif
+
+		// Platform-specific file picker
+#if ANDROID
+		builder.Services.AddSingleton<IVaultFilePicker, AndroidVaultFilePicker>();
+#else
+		builder.Services.AddSingleton<IVaultFilePicker, MauiVaultFilePicker>();
+#endif
+
 		builder.Services.AddSingleton<ICryptoProvider, CryptoProvider>();
 		builder.Services.AddSingleton<IVaultStore, FileVaultStore>();
 		builder.Services.AddSingleton<IVaultPayloadSerializer, JsonVaultPayloadSerializer>();

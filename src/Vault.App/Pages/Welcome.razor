@@ -7,7 +7,10 @@
 <p>Manage credentials in a local encrypted file.</p>
 
 <div style="display:flex; gap:12px;">
-    <button class="btn btn-primary" @onclick="GoCreate">Create new vault</button>
+    @if (ShowCreateButton)
+    {
+        <button class="btn btn-primary" @onclick="GoCreate">Create new vault</button>
+    }
     <button class="btn btn-secondary" @onclick="GoOpen">Open existing vault</button>
     @if (State.IsUnlocked)
     {
@@ -16,6 +19,12 @@
 </div>
 
 @code {
+#if ANDROID
+        private bool ShowCreateButton => false;
+#else
+        private bool ShowCreateButton => true;
+#endif
+
         private void GoCreate() => Nav.NavigateTo("/create");
         private void GoVault() => Nav.NavigateTo("/vault");
         private void GoOpen() => Nav.NavigateTo("/open");

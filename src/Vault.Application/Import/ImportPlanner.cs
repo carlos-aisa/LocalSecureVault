@@ -42,7 +42,7 @@ public static class ImportPlanner
 
             var key = ComputeKey(d.Name, d.Identifier, d.Tags);
 
-            // HashSet.Add devuelve false si ya existía
+            // HashSet.Add returns false if already existed
             if (!existingKeys.Add(key))
             {
                 skipped.Add(d);

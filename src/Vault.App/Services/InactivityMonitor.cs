@@ -58,7 +58,7 @@ public sealed class InactivityMonitor : IAsyncDisposable
                 var idle = DateTimeOffset.UtcNow - _lastActivityUtc;
                 if (idle >= _timeout)
                 {
-                    // Evita reentradas: resetea activity para no disparar en bucle
+                    // Avoid re-entrance: reset activity to prevent trigger loop
                     _lastActivityUtc = DateTimeOffset.UtcNow;
 
                     await DispatchAsync(_onTimeoutAsync!);

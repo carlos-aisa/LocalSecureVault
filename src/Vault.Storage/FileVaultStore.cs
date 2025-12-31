@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 using Vault.Application.Abstractions;
 using System.Text;
 
+#if ANDROID
+using Android.Content;
+#endif
+
 namespace Vault.Storage;
 
 public sealed class FileVaultStore : IVaultStore
@@ -14,6 +18,15 @@ public sealed class FileVaultStore : IVaultStore
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("Invalid path.", nameof(path));
 
+#if ANDROID
+        // On Android, check if this is a content:// URI
+        if (path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
+        {
+            return await ReadFromContentUriAsync(path, ct);
+        }
+#endif
+
+        // Traditional file system path
         using var fs = new FileStream(
             path,
             FileMode.Open,
@@ -22,29 +35,7 @@ public sealed class FileVaultStore : IVaultStore
             bufferSize: 4096,
             useAsync: true);
 
-        if (fs.Length < VaultFormatConstants.HeaderSizeV1 + VaultFormatConstants.TagSize)
-            throw new InvalidDataException("File too small to be a vault.");
-
-        // Read header
-        var headerBytes = new byte[VaultFormatConstants.HeaderSizeV1];
-        await ReadExactAsync(fs, headerBytes, ct);
-
-        var header = DeserializeHeader(headerBytes);
-
-        // Remaining = ciphertext + tag
-        var remaining = fs.Length - VaultFormatConstants.HeaderSizeV1;
-        if (remaining <= VaultFormatConstants.TagSize)
-            throw new InvalidDataException("Invalid vault file.");
-
-        var cipherLen = remaining - VaultFormatConstants.TagSize;
-
-        var ciphertext = new byte[cipherLen];
-        await ReadExactAsync(fs, ciphertext, ct);
-
-        var tag = new byte[VaultFormatConstants.TagSize];
-        await ReadExactAsync(fs, tag, ct);
-
-        return new VaultFile(header, ciphertext, tag);
+        return await ReadFromStreamAsync(fs, ct);
     }
 
     public async Task WriteAtomicAsync(string path, VaultFile file, CancellationToken ct = default)
@@ -53,6 +44,16 @@ public sealed class FileVaultStore : IVaultStore
             throw new ArgumentException("Invalid path.", nameof(path));
         ArgumentNullException.ThrowIfNull(file);
 
+#if ANDROID
+        // On Android, check if this is a content:// URI
+        if (path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
+        {
+            await WriteToContentUriAsync(path, file, ct);
+            return;
+        }
+#endif
+
+        // Traditional file system path - atomic write with temp file
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
@@ -67,11 +68,7 @@ public sealed class FileVaultStore : IVaultStore
             bufferSize: 4096,
             useAsync: true))
         {
-            var headerBytes = SerializeHeader(file.Header);
-            await fs.WriteAsync(headerBytes, ct);
-            await fs.WriteAsync(file.Ciphertext, ct);
-            await fs.WriteAsync(file.Tag, ct);
-            await fs.FlushAsync(ct);
+            await WriteToStreamAsync(fs, file, ct);
         }
 
         // Atomic replace (Windows)
@@ -80,6 +77,95 @@ public sealed class FileVaultStore : IVaultStore
         else
             File.Move(tempPath, path);
     }
+
+    // -----------------------
+    // Stream-based operations (platform-agnostic)
+    // -----------------------
+
+    private static async Task<VaultFile> ReadFromStreamAsync(Stream stream, CancellationToken ct)
+    {
+        if (stream.Length < VaultFormatConstants.HeaderSizeV1 + VaultFormatConstants.TagSize)
+            throw new InvalidDataException("File too small to be a vault.");
+
+        // Read header
+        var headerBytes = new byte[VaultFormatConstants.HeaderSizeV1];
+        await ReadExactAsync(stream, headerBytes, ct);
+
+        var header = DeserializeHeader(headerBytes);
+
+        // Remaining = ciphertext + tag
+        var remaining = stream.Length - VaultFormatConstants.HeaderSizeV1;
+        if (remaining <= VaultFormatConstants.TagSize)
+            throw new InvalidDataException("Invalid vault file.");
+
+        var cipherLen = remaining - VaultFormatConstants.TagSize;
+
+        var ciphertext = new byte[cipherLen];
+        await ReadExactAsync(stream, ciphertext, ct);
+
+        var tag = new byte[VaultFormatConstants.TagSize];
+        await ReadExactAsync(stream, tag, ct);
+
+        return new VaultFile(header, ciphertext, tag);
+    }
+
+    private static async Task WriteToStreamAsync(Stream stream, VaultFile file, CancellationToken ct)
+    {
+        var headerBytes = SerializeHeader(file.Header);
+        await stream.WriteAsync(headerBytes, ct);
+        await stream.WriteAsync(file.Ciphertext, ct);
+        await stream.WriteAsync(file.Tag, ct);
+        await stream.FlushAsync(ct);
+    }
+
+#if ANDROID
+    // -----------------------
+    // Android-specific content:// URI handling
+    // -----------------------
+
+    private static async Task<VaultFile> ReadFromContentUriAsync(string uriString, CancellationToken ct)
+    {
+        var context = Android.App.Application.Context;
+        var contentResolver = context.ContentResolver;
+        
+        if (contentResolver == null)
+            throw new InvalidOperationException("ContentResolver not available");
+
+        var uri = Android.Net.Uri.Parse(uriString);
+        if (uri == null)
+            throw new ArgumentException($"Invalid content URI: {uriString}");
+
+        using var inputStream = contentResolver.OpenInputStream(uri);
+        if (inputStream == null)
+            throw new IOException($"Could not open input stream for URI: {uriString}");
+
+        using var ms = new MemoryStream();
+        await inputStream.CopyToAsync(ms, ct);
+        ms.Position = 0;
+
+        return await ReadFromStreamAsync(ms, ct);
+    }
+
+    private static async Task WriteToContentUriAsync(string uriString, VaultFile file, CancellationToken ct)
+    {
+        var context = Android.App.Application.Context;
+        var contentResolver = context.ContentResolver;
+        
+        if (contentResolver == null)
+            throw new InvalidOperationException("ContentResolver not available");
+
+        var uri = Android.Net.Uri.Parse(uriString);
+        if (uri == null)
+            throw new ArgumentException($"Invalid content URI: {uriString}");
+
+        // Write to content URI (truncates existing content)
+        using var outputStream = contentResolver.OpenOutputStream(uri, "wt"); // "wt" = write truncate
+        if (outputStream == null)
+            throw new IOException($"Could not open output stream for URI: {uriString}");
+
+        await WriteToStreamAsync(outputStream, file, ct);
+    }
+#endif
 
     // -----------------------
     // Helpers

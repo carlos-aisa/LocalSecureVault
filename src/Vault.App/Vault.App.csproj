@@ -1,7 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
+		<!-- 
+			To enable Android build:
+			1. Install Android workload: dotnet workload install android
+			2. Uncomment the next line to add net8.0-android target
+		-->
+		<!-- <EnableAndroid>true</EnableAndroid> -->
+		
 		<TargetFrameworks>net8.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(EnableAndroid)' == 'true'">$(TargetFrameworks);net8.0-android</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks)</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net6.0-tizen</TargetFrameworks> -->

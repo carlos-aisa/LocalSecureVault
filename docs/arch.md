@@ -1,4 +1,4 @@
-# Arquitectura y Plan de Implementación
+# Architecture and Implementation Plan
 
 This document defines the technical architecture of the **Local Secure Vault** project, as well as the design decisions and implementation stages.
 
