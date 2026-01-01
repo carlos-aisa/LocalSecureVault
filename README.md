@@ -66,10 +66,11 @@ It is a **local personal vault**, secure and controlled by the user.
 
 ## Project Status
 
-✅ **Desktop version (Windows)** - Fully functional  
-🚧 **Android companion** - In development
+**Desktop version (Windows)** - Fully functional  
+**Android companion** - Fully funcional (open existing vault only)
 
 ### Desktop (Windows) - Implemented
+
 - Create/open vaults
 - Full CRUD operations on entries
 - Markdown import
@@ -79,8 +80,10 @@ It is a **local personal vault**, secure and controlled by the user.
 - Manual and auto-lock by inactivity
 - Show/hide password in editor
 
-### Android Companion - Planned
+### Android Companion - Implemented
+
 - Open existing vault (manual file selection)
+- Unlock vault with master password + biometric auth
 - Full CRUD operations on entries
 - Search functionality
 - Copy password to clipboard
@@ -90,4 +93,4 @@ It is a **local personal vault**, secure and controlled by the user.
 - **Transfer method**: Manual (USB, cloud storage, etc.)
 - **Sync strategy**: None - occasional mobile use expected
 
-The architecture documentation and implementation plan are located in `docs/`.
+The architecture documentation and implementation plan are located in `docs/`

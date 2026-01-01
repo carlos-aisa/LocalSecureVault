@@ -24,6 +24,20 @@ The output will be in: `src\Vault.App\bin\Debug\net8.0-windows10.0.19041.0\`
 dotnet build src\Vault.App\Vault.App.csproj -f net8.0-windows10.0.19041.0 -c Release
 ```
 
+### Run (Development)
+
+To run the application directly without building first:
+
+```powershell
+dotnet run --project src\Vault.App\Vault.App.csproj --framework net8.0-windows10.0.19041.0
+```
+
+Or navigate to the build output and run the executable:
+
+```powershell
+.\src\Vault.App\bin\Debug\net8.0-windows10.0.19041.0\Vault.App.exe
+```
+
 ### Publish (Self-Contained)
 
 For distribution without requiring .NET installed on target machines:
