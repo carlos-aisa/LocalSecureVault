@@ -34,20 +34,14 @@ public sealed class VaultAppServiceImportTests
         var result = svc.ImportPreview(markdown, doc);
 
         Assert.True(result.IsSuccess);
-        
-        // Should return both Result and Plan
         var (importResult, plan) = result.Value!;
         
         Assert.NotNull(importResult);
         Assert.NotNull(plan);
-        
-        // Verify ImportResult
         Assert.Single(importResult.Entries);
         Assert.Equal("GitHub", importResult.Entries[0].Name);
         Assert.Equal("carlos", importResult.Entries[0].Identifier);
         Assert.Equal("pass123", importResult.Entries[0].Password);
-        
-        // Verify ImportApplyPlan
         Assert.Single(plan.AddActions);
         Assert.Empty(plan.SkippedDuplicates);
     }
@@ -57,9 +51,6 @@ public sealed class VaultAppServiceImportTests
     {
         var svc = CreateSut();
         var doc = VaultDocument.CreateNew("Test Vault");
-        // Using TestHelpers
-        
-        // Add existing entry
         TestHelpers.AddEntry(doc, "GitHub", "oldpass", username: "carlos", tags: new[] { "Work" });
 
         var markdown = """
@@ -75,18 +66,10 @@ public sealed class VaultAppServiceImportTests
 
         Assert.True(result.IsSuccess);
         var (importResult, plan) = result.Value!;
-        
-        // 2 entries parsed
         Assert.Equal(2, importResult.Entries.Count);
-        
-        // 1 new, 1 duplicate
         Assert.Single(plan.AddActions);
         Assert.Single(plan.SkippedDuplicates);
-        
-        // GitLab should be added
         Assert.Equal("GitLab", plan.AddActions[0].Entry.Name);
-        
-        // GitHub should be skipped
         Assert.Equal("GitHub", plan.SkippedDuplicates[0].Name);
     }
 
@@ -108,11 +91,7 @@ public sealed class VaultAppServiceImportTests
 
         Assert.True(result.IsSuccess);
         var (importResult, plan) = result.Value!;
-        
-        // No entries because table is invalid
         Assert.Empty(importResult.Entries);
-        
-        // Should have a warning
         Assert.NotEmpty(importResult.Issues);
     }
 
@@ -123,8 +102,6 @@ public sealed class VaultAppServiceImportTests
         var doc = VaultDocument.CreateNew("Test Vault");
 
         var result = svc.ImportPreview("", doc);
-
-        // Should succeed even with empty input
         if (result.IsSuccess)
         {
             var (importResult, plan) = result.Value!;
@@ -135,13 +112,9 @@ public sealed class VaultAppServiceImportTests
         }
         else
         {
-            // Or it might fail, which is also acceptable
             Assert.False(result.IsSuccess);
         }
     }
-
-    // ---------- helpers ----------
-
     private static VaultAppService CreateSut()
     {
         var store = new FakeStore();

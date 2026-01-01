@@ -35,10 +35,6 @@ public sealed class ImportEdgeCasesTests
         var result = _importer.Parse(md);
 
         Assert.Empty(result.Entries);
-
-        // If your parser adds warnings for “no tables”, leave this.
-        // If it does NOT add warnings in this case, change to Assert.Empty(...)
-        // Assert.NotEmpty(result.Warnings);
     }
 
     [Fact]
@@ -46,16 +42,12 @@ public sealed class ImportEdgeCasesTests
     {
         var now = new DateTimeOffset(2025, 01, 01, 0, 0, 0, TimeSpan.Zero);
         var vault = VaultDocument.CreateNew("test", now);
-
-        // Import 1: Tag Carlos
         var md1 = """
         # Carlos
         | Nombre | Usuario | Contraseña |
         | --- | --- | --- |
         | DGT | cuenta | p1 |
         """;
-
-        // Import 2: Tag Empresa
         var md2 = """
         # Empresa
         | Nombre | Usuario | Contraseña |
@@ -80,8 +72,6 @@ public sealed class ImportEdgeCasesTests
     {
         var now = new DateTimeOffset(2025, 01, 01, 0, 0, 0, TimeSpan.Zero);
         var vault = VaultDocument.CreateNew("test", now);
-
-        // Entry existing “normal”
         vault.AddEntry(VaultEntry.CreateNew(
             name: "DGT",
             password: "old",
@@ -90,8 +80,6 @@ public sealed class ImportEdgeCasesTests
             notes: null,
             tags: new[] { "Carlos" },
             nowUtc: now), now);
-
-        // Import with spaces/capital letters
         var md = """
         #  CARLOS  
         | Nombre | Usuario | Contraseña |
@@ -113,8 +101,6 @@ public sealed class ImportEdgeCasesTests
         var t1 = t0.AddMinutes(10);
 
         var vault = VaultDocument.CreateNew("test", t0);
-
-        // We simulate an empty plan (all duplicates or nothing to add)
         var emptyPlan = new Vault.Application.Import.Models.ImportApplyPlan(){
             AddActions = Array.Empty<Vault.Application.Import.Models.ImportAddAction>(),
             SkippedDuplicates = Array.Empty<Vault.Application.Import.Models.ImportEntryDraft>()};
@@ -127,8 +113,6 @@ public sealed class ImportEdgeCasesTests
         Assert.Equal(0, res.Added);
         Assert.Equal(0, res.Skipped);
         Assert.Equal(beforeCount, vault.Entries.Count);
-
-        // If Apply/Touch does NOT touch UpdatedUtc when there are no changes, this should remain the same
         Assert.Equal(beforeUpdated, vault.Meta.UpdatedUtc);
     }
 }

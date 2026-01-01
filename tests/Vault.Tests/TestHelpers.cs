@@ -5,14 +5,8 @@ using Vault.Domain;
 
 namespace Vault.Tests;
 
-/// <summary>
-/// Helper methods for tests that simplify creating and manipulating vault entries.
-/// </summary>
 public static class TestHelpers
 {
-    /// <summary>
-    /// Creates and adds a new entry to the document with the specified fields.
-    /// </summary>
     public static VaultEntry AddEntry(
         VaultDocument document,
         string name,
@@ -38,9 +32,6 @@ public static class TestHelpers
         return entry;
     }
 
-    /// <summary>
-    /// Updates an existing entry in the document.
-    /// </summary>
     public static void UpdateEntry(
         VaultDocument document,
         Guid entryId,
@@ -68,9 +59,6 @@ public static class TestHelpers
         document.Touch(nowUtc);
     }
 
-    /// <summary>
-    /// Deletes an entry from the document.
-    /// </summary>
     public static bool DeleteEntry(
         VaultDocument document,
         Guid entryId,

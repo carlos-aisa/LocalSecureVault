@@ -149,8 +149,6 @@ public class VaultEntryEdgeCasesTests
     public void Tags_IsReadOnlyCollection()
     {
         var entry = VaultEntry.CreateNew("GitHub", "pw", tags: new[] { "work" });
-
-        // Should be IReadOnlyCollection, not a mutable collection
         Assert.IsAssignableFrom<IReadOnlyCollection<string>>(entry.Tags);
     }
 

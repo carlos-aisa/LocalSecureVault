@@ -12,8 +12,6 @@ public class EntryUseCasesEdgeCasesTests
     [Fact]
     public void AddEntry_WithNullDocument_ThrowsArgumentNullException()
     {
-        // Using TestHelpers
-
         Assert.Throws<ArgumentNullException>(() => 
             TestHelpers.AddEntry(null!, "GitHub", "pw"));
     }
@@ -22,8 +20,6 @@ public class EntryUseCasesEdgeCasesTests
     public void AddEntry_ReturnsCreatedEntry()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
-
         var entry = TestHelpers.AddEntry(doc, "GitHub", "pw", username: "carlos");
 
         Assert.NotNull(entry);
@@ -37,7 +33,6 @@ public class EntryUseCasesEdgeCasesTests
     public void AddEntry_WithAllOptionalFields_CreatesFullEntry()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
         var now = new DateTimeOffset(2025, 12, 15, 0, 0, 0, TimeSpan.Zero);
 
         var entry = TestHelpers.AddEntry(
@@ -62,8 +57,6 @@ public class EntryUseCasesEdgeCasesTests
     [Fact]
     public void UpdateEntry_WithNullDocument_ThrowsArgumentNullException()
     {
-        // Using TestHelpers
-
         Assert.Throws<ArgumentNullException>(() => 
             TestHelpers.UpdateEntry(null!, Guid.NewGuid(), "GitHub", "pw"));
     }
@@ -72,7 +65,6 @@ public class EntryUseCasesEdgeCasesTests
     public void UpdateEntry_WithNonExistentId_ThrowsKeyNotFoundException()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
 
         Assert.Throws<KeyNotFoundException>(() =>
             TestHelpers.UpdateEntry(doc, Guid.NewGuid(), "GitHub", "pw"));
@@ -85,8 +77,6 @@ public class EntryUseCasesEdgeCasesTests
         var t2 = t1.AddMinutes(10);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        // Using TestHelpers
-        
         var entry = TestHelpers.AddEntry(doc, "GitHub", "oldpw", nowUtc: t1);
         var originalId = entry.Id;
         var originalCreated = entry.CreatedUtc;
@@ -111,8 +101,6 @@ public class EntryUseCasesEdgeCasesTests
     [Fact]
     public void DeleteEntry_WithNullDocument_ThrowsArgumentNullException()
     {
-        // Using TestHelpers
-
         Assert.Throws<ArgumentNullException>(() => 
             TestHelpers.DeleteEntry(null!, Guid.NewGuid()));
     }
@@ -121,8 +109,6 @@ public class EntryUseCasesEdgeCasesTests
     public void DeleteEntry_WithNonExistentId_ReturnsFalse()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
-
         var result = TestHelpers.DeleteEntry(doc, Guid.NewGuid());
 
         Assert.False(result);
@@ -132,8 +118,6 @@ public class EntryUseCasesEdgeCasesTests
     public void DeleteEntry_RemovesEntryAndReturnsTrue()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
-        
         var entry = TestHelpers.AddEntry(doc, "GitHub", "pw");
         Assert.Single(doc.Entries);
 
@@ -150,8 +134,6 @@ public class EntryUseCasesEdgeCasesTests
         var t2 = t1.AddMinutes(5);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        // Using TestHelpers
-        
         var entry = TestHelpers.AddEntry(doc, "GitHub", "pw", nowUtc: t1);
 
         TestHelpers.DeleteEntry(doc, entry.Id, nowUtc: t2);
@@ -163,7 +145,6 @@ public class EntryUseCasesEdgeCasesTests
     public void AddEntry_MultipleEntries_AllAddedSuccessfully()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
 
         var e1 = TestHelpers.AddEntry(doc, "GitHub", "pw1");
         var e2 = TestHelpers.AddEntry(doc, "GitLab", "pw2");
@@ -179,8 +160,6 @@ public class EntryUseCasesEdgeCasesTests
     public void UpdateEntry_CanClearOptionalFields()
     {
         var doc = VaultDocument.CreateNew("Vault");
-        // Using TestHelpers
-        
         var entry = TestHelpers.AddEntry(
             doc, 
             "GitHub", 
@@ -190,7 +169,6 @@ public class EntryUseCasesEdgeCasesTests
             notes: "Work",
             tags: new[] { "dev" });
 
-        // Clear all optional fields
         TestHelpers.UpdateEntry(
             doc,
             entry.Id,

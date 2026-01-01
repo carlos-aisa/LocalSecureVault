@@ -118,8 +118,6 @@ public class CryptoProviderTests
         var plaintext = new byte[] { 1, 2, 3, 4, 5 };
 
         var blob = crypto.Encrypt(plaintext, aad, key);
-
-        // Tamper with the authentication tag
         blob.Tag[0] ^= 0xFF;
 
         Assert.ThrowsAny<CryptographicException>(() => crypto.Decrypt(blob, aad, key));

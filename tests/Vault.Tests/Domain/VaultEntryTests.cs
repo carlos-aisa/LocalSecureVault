@@ -25,8 +25,6 @@ public class VaultEntryTests
         Assert.Equal("carlos", entry.Username);
         Assert.Equal("https://github.com", entry.Url);
         Assert.Equal("note", entry.Notes);
-
-        // Domain doesn't deduplicate/lowercase/order tags; it only trims and removes empties.
         Assert.Equal(new[] { "Dev", "personal", "DEV" }, entry.Tags);
 
         Assert.Equal(now, entry.CreatedUtc);

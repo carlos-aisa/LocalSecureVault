@@ -132,9 +132,6 @@ public class VaultAppServiceCreateTests
         Assert.Equal(VaultErrorCode.Unknown, result.Error!.Code);
         Assert.Contains("Unexpected error", result.Error.UserMessage);
     }
-
-    // Fake implementations
-
     private class FakeCryptoService : IVaultCryptoService
     {
         public VaultCreateResult CreateVault(VaultDocument doc, ReadOnlySpan<char> masterPassword, KdfProfile profile, DateTimeOffset? nowUtc = null)

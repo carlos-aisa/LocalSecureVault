@@ -8,9 +8,6 @@ using Xunit;
 
 namespace Vault.Tests;
 
-/// <summary>
-/// Tests for EntryUseCases validation logic including duplicate detection
-/// </summary>
 public class EntryUseCasesTests
 {
     [Fact]
@@ -42,7 +39,7 @@ public class EntryUseCasesTests
         Assert.False(result.IsSuccess);
         Assert.Equal(VaultErrorCode.InvalidFormat, result.Error!.Code);
         Assert.Contains("already exists", result.Error.UserMessage);
-        Assert.Single(doc.Entries); // Only first entry added
+        Assert.Single(doc.Entries);
     }
 
     [Fact]
@@ -149,7 +146,6 @@ public class EntryUseCasesTests
         uc.Add(doc, entry1);
         uc.Add(doc, entry2);
 
-        // Try to change entry2 to have the same name/username as entry1
         var result = uc.Update(
             doc,
             entry2.Id,
@@ -174,7 +170,6 @@ public class EntryUseCasesTests
         var entry = VaultEntry.CreateNew("GitHub", "oldpw", username: "carlos");
         uc.Add(doc, entry);
 
-        // Update but keep same name and username
         var result = uc.Update(
             doc,
             entry.Id,
@@ -200,7 +195,6 @@ public class EntryUseCasesTests
         uc.Add(doc, entry1);
         uc.Add(doc, entry2);
 
-        // Try to change entry2 with different case
         var result = uc.Update(
             doc,
             entry2.Id,
@@ -276,7 +270,6 @@ public class EntryUseCasesTests
         uc.Add(doc, entry1);
         var result = uc.Add(doc, entry2);
 
-        // Empty string and null should be treated as the same
         Assert.False(result.IsSuccess);
         Assert.Single(doc.Entries);
     }

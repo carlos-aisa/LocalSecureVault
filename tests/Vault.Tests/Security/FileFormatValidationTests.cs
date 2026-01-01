@@ -5,9 +5,6 @@ using Xunit;
 
 namespace Vault.Tests;
 
-/// <summary>
-/// Tests for file format validation - magic bytes, version checks, and header integrity
-/// </summary>
 public class FileFormatValidationTests
 {
     [Fact]
@@ -18,9 +15,8 @@ public class FileFormatValidationTests
 
         try
         {
-            // Create a file with wrong magic bytes
             var header = new VaultFileHeader(
-                Magic: "BAD!",  // Wrong magic
+                Magic: "BAD!",
                 Version: VaultFormatConstants.Version,
                 Flags: 0,
                 KdfId: VaultFormatConstants.KdfIdArgon2id,
@@ -39,10 +35,8 @@ public class FileFormatValidationTests
             var file = new VaultFile(header, new byte[] { 1, 2, 3 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, file);
 
-            // Read the file - FileVaultStore doesn't validate, just deserializes
             var read = await store.ReadAsync(temp);
             
-            // Application layer should reject wrong magic
             Assert.NotEqual(VaultFormatConstants.Magic, read.Header.Magic);
         }
         finally
@@ -59,10 +53,9 @@ public class FileFormatValidationTests
 
         try
         {
-            // Create a file with unsupported version
             var header = new VaultFileHeader(
                 Magic: VaultFormatConstants.Magic,
-                Version: 999,  // Unsupported version
+                Version: 999,
                 Flags: 0,
                 KdfId: VaultFormatConstants.KdfIdArgon2id,
                 PayloadEncoding: VaultFormatConstants.PayloadJsonUtf8,
@@ -80,10 +73,8 @@ public class FileFormatValidationTests
             var file = new VaultFile(header, new byte[] { 1, 2, 3 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, file);
 
-            // Read the file - FileVaultStore doesn't validate version
             var read = await store.ReadAsync(temp);
             
-            // Application layer should reject unsupported version
             Assert.NotEqual(VaultFormatConstants.Version, read.Header.Version);
         }
         finally
@@ -99,12 +90,9 @@ public class FileFormatValidationTests
 
         try
         {
-            // Write a file that's shorter than the required header size
             await File.WriteAllBytesAsync(temp, new byte[50]); // Only 50 bytes, need 82 + tag
 
             var store = new FileVaultStore();
-            
-            // Should throw because file is too short
             await Assert.ThrowsAnyAsync<Exception>(() => store.ReadAsync(temp));
         }
         finally
@@ -121,7 +109,6 @@ public class FileFormatValidationTests
 
         try
         {
-            // Create a valid file
             var header = new VaultFileHeader(
                 Magic: VaultFormatConstants.Magic,
                 Version: VaultFormatConstants.Version,
@@ -141,8 +128,6 @@ public class FileFormatValidationTests
 
             var file = new VaultFile(header, new byte[] { 1, 2, 3 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, file);
-
-            // Should succeed
             var read = await store.ReadAsync(temp);
             
             Assert.NotNull(read);

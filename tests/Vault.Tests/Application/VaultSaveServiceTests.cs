@@ -86,9 +86,6 @@ namespace Vault.Application.Tests.Services
             Assert.False(res.IsSuccess);
             Assert.Equal(VaultErrorCode.Unknown, res.Error!.Code);
         }
-
-        // --------- fakes ---------
-
         private sealed class FakeStore : IVaultStore
         {
             private readonly Func<string, VaultFile, CancellationToken, Task> _write;
@@ -119,9 +116,6 @@ namespace Vault.Application.Tests.Services
                                  KdfProfile profile,DateTimeOffset? nowUtc = null)
                 => throw new NotImplementedException("Not needed for save tests.");
         }
-        
-
-        // --------- dummy builders ---------
         private static VaultDocument DummyDocument()
             => VaultDocument.CreateNew("test-vault");
 

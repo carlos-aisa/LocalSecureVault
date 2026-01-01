@@ -113,8 +113,6 @@ public sealed class MarkdownVaultImporterTests
     {
         var now = new DateTimeOffset(2025, 01, 01, 0, 0, 0, TimeSpan.Zero);
         var vault = VaultDocument.CreateNew("test", now);
-
-        // Entrada existente
         vault.AddEntry(VaultEntry.CreateNew(
             name: "DGT",
             password: "old",
@@ -186,8 +184,6 @@ public sealed class MarkdownVaultImporterTests
         Assert.Equal(0, res.Skipped);
 
         Assert.Equal(2, vault.Entries.Count);
-
-        // Touch() debe haber actualizado meta.UpdatedUtc (si tu VaultMetadata lo expone así)
         Assert.True(vault.Meta.UpdatedUtc >= t1);
     }
 }

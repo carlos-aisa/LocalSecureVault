@@ -118,8 +118,6 @@ public class VaultDocumentEdgeCasesTests
         var doc = VaultDocument.CreateNew("Vault");
         var entry = VaultEntry.CreateNew("GitHub", "pw");
         doc.AddEntry(entry);
-
-        // Should be IReadOnlyList, not a mutable list
         Assert.IsAssignableFrom<IReadOnlyList<VaultEntry>>(doc.Entries);
     }
 }

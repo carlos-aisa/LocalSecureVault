@@ -5,10 +5,6 @@ using Vault.Storage;
 using Xunit;
 
 namespace Vault.Tests;
-
-/// <summary>
-/// Tests for atomic write operations and concurrent access safety
-/// </summary>
 public class AtomicWriteAndConcurrencyTests
 {
     [Fact]
@@ -19,16 +15,11 @@ public class AtomicWriteAndConcurrencyTests
 
         try
         {
-            // Write initial valid file
             var originalHeader = CreateValidHeader();
             var originalFile = new VaultFile(originalHeader, new byte[] { 1, 2, 3 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, originalFile);
-
-            // Verify original is readable
             var original = await store.ReadAsync(temp);
             Assert.NotNull(original);
-
-            // Simulate a failed write by making the file read-only
             var fileInfo = new FileInfo(temp);
             fileInfo.IsReadOnly = true;
 
@@ -36,14 +27,8 @@ public class AtomicWriteAndConcurrencyTests
             {
                 var newHeader = CreateValidHeader();
                 var newFile = new VaultFile(newHeader, new byte[] { 4, 5, 6, 7 }, new byte[VaultFormatConstants.TagSize]);
-                
-                // This should fail
                 await Assert.ThrowsAnyAsync<Exception>(() => store.WriteAtomicAsync(temp, newFile));
-
-                // Remove read-only to verify original is still intact
                 fileInfo.IsReadOnly = false;
-
-                // Original file should still be readable and unchanged
                 var afterFailed = await store.ReadAsync(temp);
                 Assert.NotNull(afterFailed);
                 Assert.Equal(original.Ciphertext, afterFailed.Ciphertext);
@@ -68,17 +53,12 @@ public class AtomicWriteAndConcurrencyTests
 
         try
         {
-            // Write initial file
             var originalHeader = CreateValidHeader();
             var originalFile = new VaultFile(originalHeader, new byte[] { 1, 2, 3 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, originalFile);
-
-            // Replace with new file
             var newHeader = CreateValidHeader();
             var newFile = new VaultFile(newHeader, new byte[] { 7, 8, 9, 10, 11 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, newFile);
-
-            // New file should be readable with new content
             var afterReplace = await store.ReadAsync(temp);
             Assert.NotNull(afterReplace);
             Assert.Equal(newFile.Ciphertext, afterReplace.Ciphertext);
@@ -98,7 +78,6 @@ public class AtomicWriteAndConcurrencyTests
 
         try
         {
-            // Write initial file
             var initialHeader = CreateValidHeader();
             var initialFile = new VaultFile(initialHeader, new byte[] { 0 }, new byte[VaultFormatConstants.TagSize]);
             await store.WriteAtomicAsync(temp, initialFile);
@@ -111,8 +90,6 @@ public class AtomicWriteAndConcurrencyTests
                 new byte[] { 4 }, 
                 new byte[] { 5 } 
             };
-
-            // Launch multiple concurrent writes
             for (int i = 0; i < tasks.Length; i++)
             {
                 var content = contents[i];
@@ -133,20 +110,10 @@ public class AtomicWriteAndConcurrencyTests
             }
 
             var results = await Task.WhenAll(tasks);
-
-            // At least some writes should complete (may succeed or fail with IO errors)
-            // The key is that the file should not be corrupted
             var read = await store.ReadAsync(temp);
             Assert.NotNull(read);
-            
-            // File should be valid - either the initial or one of the new contents
             Assert.True(read.Ciphertext.Length > 0);
-            
-            // Verify at least one write succeeded (content changed from initial)
             bool anySucceeded = !read.Ciphertext.SequenceEqual(new byte[] { 0 });
-            
-            // Note: we can't guarantee ALL succeed due to file system locking,
-            // but we verify no corruption occurred
         }
         finally
         {

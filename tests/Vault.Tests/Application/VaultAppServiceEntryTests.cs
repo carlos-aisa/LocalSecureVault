@@ -156,9 +156,6 @@ public sealed class VaultAppServiceEntryTests
         Assert.False(result.IsSuccess);
         Assert.Equal(VaultErrorCode.InvalidPath, result.Error!.Code);
     }
-
-    // ---------- helpers ----------
-
     private static VaultAppService CreateSut()
     {
         var store = new FakeStore();

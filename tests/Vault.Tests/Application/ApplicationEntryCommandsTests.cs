@@ -13,8 +13,6 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(1);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        // Using TestHelpers
-
         var entry = TestHelpers.AddEntry(doc, "GitHub", "pw", nowUtc: t2);
 
         Assert.Single(doc.Entries);
@@ -29,7 +27,6 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(5);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        // Using TestHelpers
         var entry = TestHelpers.AddEntry(doc, "A", "P", nowUtc: t1);
 
         TestHelpers.UpdateEntry(doc, entry.Id, "B", "Q", nowUtc: t2);
@@ -46,7 +43,6 @@ public class ApplicationEntryCommandsTests
         var t2 = t1.AddMinutes(3);
 
         var doc = VaultDocument.CreateNew("Vault", nowUtc: t1);
-        // Using TestHelpers
         var entry = TestHelpers.AddEntry(doc, "A", "P", nowUtc: t1);
 
         var removed = TestHelpers.DeleteEntry(doc, entry.Id, nowUtc: t2);

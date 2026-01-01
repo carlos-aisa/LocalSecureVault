@@ -67,17 +67,12 @@ public sealed class VaultAppServiceOpenTests
         Assert.False(res.IsSuccess);
         Assert.Equal(VaultErrorCode.UnsupportedOrCorrupted, res.Error!.Code);
     }
-
-    // ---------- helpers ----------
-
     private static VaultAppService CreateSut(
         Func<string, Task<VaultFile>> storeRead,
         Func<VaultFile, VaultUnlockResult> cryptoUnlock)
     {
         var store = new FakeStore(storeRead);
         var crypto = new FakeCrypto(cryptoUnlock);
-
-        // No usados por OpenAsync, pero requeridos por el constructor:
         var saver = new FakeSaver();
         var import = new FakeImportService();
         var entries = new EntryUseCases();
@@ -109,8 +104,6 @@ public sealed class VaultAppServiceOpenTests
         public VaultFile SealForSave(VaultDocument document, VaultFileHeader header, ReadOnlySpan<byte> sessionKey, DateTimeOffset? nowUtc = null)
             => throw new NotImplementedException();
     }
-
-    // Fakes mínimos solo para satisfacer el ctor
     private sealed class FakeSaver : VaultSaveService
     {
         public FakeSaver() : base(new DummyStore(), new DummyCrypto()) { }
