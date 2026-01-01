@@ -34,22 +34,24 @@ The project follows a layered architecture inspired by Clean Architecture.
 
 ### Project Structure
 
-LocalSecureVault.sln
-│
-|-- Vault.Domain
-│ |- Entities and business rules
-│
-|-- Vault.Application
-│ |- Use cases and application logic
-│
-|-- Vault.Crypto
-│ |- Cryptography (Argon2id + AES-GCM)
-│
-|-- Vault.Storage
-│ |- File format and disk access
-│
-|-- Vault.Ui
-│ |- Blazor Hybrid (MAUI)
+```
+ LocalSecureVault.sln
+ │
+ |-- Vault.Domain
+ │ |- Entities and business rules
+ │
+ |-- Vault.Application
+ │ |- Use cases and application logic
+ │
+ |-- Vault.Crypto
+ │ |- Cryptography (Argon2id + AES-GCM)
+ │
+ |-- Vault.Storage
+ │ |- File format and disk access
+ │
+ |-- Vault.App
+ │ |- Blazor Hybrid (MAUI)
+```
 
 ---
 
@@ -192,7 +194,6 @@ JSON format (MVP):
 ### Phase 4.5 – Importers
 
 - [x] Markdown importer
-- [ ] CSV importer (optional)
 - [x] Import tests
 
 ---
@@ -201,6 +202,11 @@ JSON format (MVP):
 
 - [x] Clipboard with auto-clear
 - [x] Auto-lock on inactivity
+
+### Phase 6 – Android Companion App
+
+- [x] Create Android file picker for vault selection
+- [x] Unlock with password + biometric auth
 
 ---
 
