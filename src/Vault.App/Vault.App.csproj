@@ -21,7 +21,7 @@
 
 		<ApplicationTitle>Vault.App</ApplicationTitle>
 
-		<ApplicationId>com.companyname.vault.app</ApplicationId>
+		<ApplicationId>com.carlosaredo.vault.app</ApplicationId>
 		<ApplicationIdGuid>737385DB-C048-4EE1-BE75-F624F2D2AD50</ApplicationIdGuid>
         <WindowsPackageType>None</WindowsPackageType>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
@@ -43,7 +43,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\appicon.svg" ForegroundFile="Resources\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Include="Resources\appicon.png"/>
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\appicon.png"/>

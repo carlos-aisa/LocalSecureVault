@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <!-- TargetFramework removed - each project defines its own TargetFrameworks -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
