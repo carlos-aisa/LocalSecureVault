@@ -9,7 +9,8 @@ public enum VaultErrorCode
     AccessDenied,
     FileNotFound,
     IoError,
-    Unknown
+    AuthenticationDecryptionError,
+    Unknown,
 }
 
 public sealed record VaultError(VaultErrorCode Code, string UserMessage, string? Detail = null);

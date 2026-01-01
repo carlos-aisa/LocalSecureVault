@@ -40,6 +40,15 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IVaultFilePicker, MauiVaultFilePicker>();
 #endif
 
+		// Platform-specific biometric authentication
+#if ANDROID
+		builder.Services.AddSingleton<IBiometricAuthService, AndroidBiometricAuthService>();
+#elif WINDOWS
+		builder.Services.AddSingleton<IBiometricAuthService, WindowsBiometricAuthService>();
+#else
+		builder.Services.AddSingleton<IBiometricAuthService, WindowsBiometricAuthService>();
+#endif
+
 		builder.Services.AddSingleton<ICryptoProvider, CryptoProvider>();
 		builder.Services.AddSingleton<IVaultStore, FileVaultStore>();
 		builder.Services.AddSingleton<IVaultPayloadSerializer, JsonVaultPayloadSerializer>();

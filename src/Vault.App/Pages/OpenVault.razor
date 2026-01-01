@@ -11,6 +11,7 @@
 @inject IRecentVaultPathStore Recent
 @inject VaultAppService App
 @inject IJSRuntime JS
+@inject IBiometricAuthService BiometricAuth
 
 <h3>Open existing vault</h3>
 
@@ -45,6 +46,20 @@
 
         <div class="form-text">
             Last opened vault: <code>@RecentPathHint</code>
+        </div>
+    </div>
+}
+
+@if (ShowBiometricButton && !State.IsUnlocked)
+{
+    <div class="mb-3">
+        <button class="btn btn-success"
+                @onclick="UnlockWithBiometricAsync"
+                disabled="@IsBusy">
+                Unlock with fingerprint
+        </button>
+        <div class="form-text text-muted">
+            Use your fingerprint to unlock the vault
         </div>
     </div>
 }
@@ -102,10 +117,19 @@
     private bool IsBusy;
     private string? RecentPathHint;
     private bool HasRecent => !string.IsNullOrWhiteSpace(RecentPathHint);
+    private bool ShowBiometricButton;
+    private bool BiometricAvailable;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         RecentPathHint = Recent.GetLastPath();
+        BiometricAvailable = await BiometricAuth.IsBiometricAvailableAsync();
+
+        // Check if there's a stored password for the recent vault
+        if (BiometricAvailable && HasRecent)
+        {
+            ShowBiometricButton = await BiometricAuth.HasStoredPasswordAsync(RecentPathHint!);
+        }
     }
 
     private void BackToVault() => Nav.NavigateTo("/vault");
@@ -123,7 +147,7 @@
         }
 
         State.Lock();
-        // replace:true evita volver atrás a una pantalla que ya no aplica
+        // replace:true avoid going back to a screen that no longer applies
         Nav.NavigateTo("/open", replace: true);
     }
 
@@ -159,12 +183,86 @@
             var unlocked = result.Value!;
             State.SetUnlocked(unlocked.Path, unlocked.Document, unlocked.SessionKey, unlocked.Header);
             Recent.SetLastPath(unlocked.Path);
+
+            // Offer to enable biometric authentication after successful unlock
+            if (BiometricAvailable && !await BiometricAuth.HasStoredPasswordAsync(VaultPath))
+            {
+                var enableBiometric = await JS.InvokeAsync<bool>(
+                    "confirm",
+                    "Do you want to enable fingerprint unlock for this vault?");
+
+                if (enableBiometric)
+                {
+                    await BiometricAuth.StorePasswordAsync(VaultPath, Password);
+                }
+            }
+
             Nav.NavigateTo("/vault");
         }
         finally
         {
             IsBusy = false;
             Password = "";
+        }
+    }
+
+    private async Task UnlockWithBiometricAsync()
+    {
+        if (string.IsNullOrWhiteSpace(RecentPathHint))
+            return;
+
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            var authenticated = await BiometricAuth.AuthenticateAsync("Unlock vault");
+
+            if (!authenticated)
+            {
+                Error = "Biometric authentication cancelled or failed";
+                return;
+            }
+
+            var storedPassword = await BiometricAuth.GetPasswordAsync(RecentPathHint);
+
+            if (string.IsNullOrEmpty(storedPassword))
+            {
+                Error = "Could not retrieve stored password for biometric unlock";
+                ShowBiometricButton = false;
+                return;
+            }
+
+            VaultPath = RecentPathHint;
+            var result = await App.OpenAsync(VaultPath, storedPassword.AsMemory());
+
+            if (!result.IsSuccess)
+            {
+                Error = result.Error!.UserMessage;
+
+                // If password is wrong, clear stored biometric data
+                if (result.Error.Code == VaultErrorCode.AuthenticationDecryptionError)
+                {
+                    await BiometricAuth.ClearStoredPasswordAsync(VaultPath);
+                    ShowBiometricButton = false;
+                    Error += " (Stored password removed. Please enter the password manually.)";
+                }
+
+                return;
+            }
+
+            var unlocked = result.Value!;
+            State.SetUnlocked(unlocked.Path, unlocked.Document, unlocked.SessionKey, unlocked.Header);
+            Recent.SetLastPath(unlocked.Path);
+            Nav.NavigateTo("/vault");
+        }
+        catch (Exception ex)
+        {
+            Error = $"Error during biometric authentication: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
