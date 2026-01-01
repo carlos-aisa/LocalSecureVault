@@ -8,6 +8,7 @@ using Vault.Storage;
 using Vault.Storage.Serialization;
 using Vault.App.Platform;
 using Vault.App.Services;
+using Microsoft.Maui.LifecycleEvents;
 
 namespace Vault.App;
 

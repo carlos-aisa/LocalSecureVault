@@ -35,11 +35,13 @@ App (UI)       (Desktop/Android variants)
 ### Platform: Specific Components
 
 #### Desktop (Windows)
+
 - `Vault.App` (MAUI Blazor)
 - `IVaultFilePicker` → `MauiVaultFilePicker` (Windows)
 - `IRecentVaultPathStore` → `PreferencesRecentVaultPathStore`
 
 #### Android (New)
+
 - `Vault.App` (same MAUI project, Android target)
 - `IVaultFilePicker` → `AndroidVaultFilePicker` (Storage Access Framework)
 - `IRecentVaultPathStore` → `PreferencesRecentVaultPathStore` (can be reused)
@@ -48,6 +50,7 @@ App (UI)       (Desktop/Android variants)
 ### Critical Abstraction Interface
 
 **IVaultFilePicker** (already exists on Desktop):
+
 ```csharp
 public interface IVaultFilePicker
 {
@@ -57,6 +60,7 @@ public interface IVaultFilePicker
 ```
 
 **New Android implementation**:
+
 ```csharp
 public class AndroidVaultFilePicker : IVaultFilePicker
 {
@@ -69,11 +73,13 @@ public class AndroidVaultFilePicker : IVaultFilePicker
 ### File Management on Android
 
 #### Problem
+
 - Android doesn't use traditional paths (`C:\...`)
 - Uses **content:// URIs** (Storage Access Framework)
 - We need **persisted permissions** to remember the last vault
 
 #### Solution
+
 1. `IVaultFilePicker` returns URI (string)
 2. `IVaultStore` (FileVaultStore) must support URIs on Android
 3. On Android, use `ContentResolver` to read/write streams
@@ -82,6 +88,7 @@ public class AndroidVaultFilePicker : IVaultFilePicker
 ### Adjustment in FileVaultStore
 
 **Current** (filesystem paths only):
+
 ```csharp
 public async Task<VaultFile> LoadAsync(string filePath)
 {
@@ -91,6 +98,7 @@ public async Task<VaultFile> LoadAsync(string filePath)
 ```
 
 **Proposed** (cross-platform):
+
 ```csharp
 public async Task<VaultFile> LoadAsync(string filePathOrUri)
 {
@@ -127,12 +135,14 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 ## 📋 Incremental Development Plan
 
 ### ✅ Phase 0: Preparation and Analysis
+
 - [x] Review existing `Vault.App` code
 - [x] Identify Windows-specific dependencies
 - [x] Document interfaces to implement for Android
 - [x] Create planning document (this file)
 
 ### ✅ Phase 1: Android Project Configuration
+
 - [x] Enable Android target in `Vault.App.csproj`
 - [x] Configure permissions in `AndroidManifest.xml`
   - `READ_EXTERNAL_STORAGE` (if API < 30)
@@ -143,6 +153,7 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - [ ] ⏳ Test execution on emulator or device
 
 ### ✅ Phase 2: File Picker Abstraction
+
 - [x] Review existing `IVaultFilePicker`
 - [x] Implement `AndroidVaultFilePicker` using SAF
   - Use `Intent.ActionOpenDocument`
@@ -153,6 +164,7 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - [ ] ⏳ Test file selection on Android
 
 ### ✅ Phase 3: FileVaultStore Adaptation
+
 - [x] Refactor `LoadAsync` to support `content://` URIs
 - [x] Refactor `SaveAsync` to support `content://` URIs
 - [x] Create Android-specific helper methods:
@@ -162,12 +174,14 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - [ ] ⏳ Test read/write on Android
 
 ### ✅ Phase 4: Last Vault Persistence
+
 - [x] Review `IRecentVaultPathStore` (reusable)
 - [x] Ensure it saves URIs on Android (not paths)
 - [x] Implement "Open Last Vault" logic on Android
 - [ ] ⏳ Verify URI with permissions persists after restart
 
 ### ✅ Phase 5: UI Adjustments for Android
+
 - [x] Review Blazor page navigation on Android
 - [x] Adjust `Welcome.razor` for Android (no "Create Vault")
 - [x] `OpenVault.razor` works without changes
@@ -175,6 +189,7 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - [ ] ⏳ Test complete flow: Open → Edit → Save → Lock
 
 ### ✅ Phase 6: Complete Features
+
 - [x] Verify SearchService works on Android (pure logic)
 - [x] Verify ClipboardService works on Android (MAUI API)
 - [x] Verify InactivityMonitor works on Android (MAUI Dispatcher)
@@ -182,6 +197,7 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - [ ] ⏳ Test manual and inactivity Lock
 
 ### ⏳ Phase 7: Testing and Refinement
+
 - [ ] Install Android workload: `dotnet workload install android`
 - [ ] Enable Android: Uncomment `<EnableAndroid>true</EnableAndroid>`
 - [ ] Build for Android: `dotnet build -f net8.0-android`
@@ -193,6 +209,7 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - [ ] Document known limitations
 
 ### ⏳ Phase 8: Packaging and Distribution
+
 - [ ] Configure APK signing
 - [ ] Configure Release build
 - [ ] Generate APK for distribution
@@ -204,18 +221,22 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 ## 🚨 Risks and Considerations
 
 ### Risk 1: Content URIs vs Traditional Paths
+
 **Impact**: High  
 **Mitigation**: Complete abstraction in `IVaultStore`, use compilation directives
 
 ### Risk 2: Persisted Permissions
+
 **Impact**: Medium  
 **Mitigation**: Document proper use of `TakePersistableUriPermission`, test app restart
 
 ### Risk 3: Concurrent Edits
+
 **Impact**: Low (occasional mobile use)  
 **Mitigation**: Document no automatic merge, last write wins
 
 ### Risk 4: UI Differences between Desktop and Mobile
+
 **Impact**: Low  
 **Mitigation**: Blazor is responsive, adjust CSS if needed
 
@@ -224,24 +245,28 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 ## 🎓 Architecture Decisions
 
 ### ✅ Decision 1: One Project, Multiple Targets
+
 **Context**: We need Desktop and Android  
 **Decision**: Use same `Vault.App.csproj` with multiple targets  
 **Rejected alternatives**: Separate projects (duplication)  
 **Consequence**: Shared code, specific implementations with DI
 
 ### ✅ Decision 2: Storage Access Framework (SAF)
+
 **Context**: Android 10+ restricts file access  
 **Decision**: Use SAF with content:// URIs  
 **Rejected alternatives**: MANAGE_EXTERNAL_STORAGE (too permissive)  
 **Consequence**: Better security, moderate complexity
 
 ### ✅ Decision 3: No Vault Creation on Android
+
 **Context**: Simpler UX, less critical flow  
 **Decision**: Only open existing vaults on Android  
 **Rejected alternatives**: Implement full creation  
 **Consequence**: First time requires Desktop, but simplifies code
 
 ### ✅ Decision 4: Don't Modify Application/Domain/Crypto
+
 **Context**: Current architecture is solid  
 **Decision**: Changes only in Storage (URIs) and App (UI/DI)  
 **Rejected alternatives**: Large refactor  
@@ -295,14 +320,17 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 ### Changes Made
 
 #### 1. **Vault.App.csproj**
+
 - ✅ Enabled `net8.0-android` target in addition to Windows
 - ✅ Functional multi-target configuration
 
 #### 2. **AndroidManifest.xml**
+
 - ✅ Basic permissions configured (READ/WRITE_EXTERNAL_STORAGE for API < 33)
 - ✅ Application label defined
 
 #### 3. **AndroidVaultFilePicker** (NEW)
+
 - ✅ Implementation using Storage Access Framework (SAF)
 - ✅ Use of `Intent.ActionOpenDocument` with MIME type filter
 - ✅ **Persisted URI permissions** via `TakePersistableUriPermission`
@@ -310,6 +338,7 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - ✅ Persisted permissions verification when retrieving last URI
 
 #### 4. **FileVaultStore** (ADAPTED)
+
 - ✅ Refactored to support both traditional paths and `content://` URIs
 - ✅ Separate methods for stream-based operations (platform-agnostic)
 - ✅ Android-specific implementation with `#if ANDROID` directives
@@ -319,15 +348,18 @@ private async Task<byte[]> ReadFromContentUri(string uri)
 - ✅ Desktop version not contaminated
 
 #### 5. **MauiProgram.cs**
+
 - ✅ Conditional registration of `IVaultFilePicker` by platform
 - ✅ Android uses `AndroidVaultFilePicker`
 - ✅ Desktop uses `MauiVaultFilePicker`
 
 #### 6. **Welcome.razor**
+
 - ✅ "Create new vault" button hidden on Android with `#if !ANDROID` directive
 - ✅ Simplified flow for Android (open existing vaults only)
 
 #### 7. **Cross-platform Services**
+
 - ✅ `ClipboardService` - Uses `Clipboard.Default` (MAUI), Android compatible
 - ✅ `InactivityMonitor` - Uses `IDispatcher` (MAUI), Android compatible
 - ✅ `SearchService` - Pure C# logic, no platform dependencies

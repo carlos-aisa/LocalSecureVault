@@ -123,5 +123,71 @@ a.btn:focus-visible {
 .nav-link.disabled {
   opacity: 0.5 !important;
   cursor: not-allowed !important;
-  pointer-events: none; /* so it doesn't respond to hover or click */
+  pointer-events: none;
+}
+
+/* === Badge styling === */
+.badge {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* === Mobile/Android responsive adjustments === */
+@media (max-width: 768px) {
+    html, body {
+        font-size: 14px;
+    }
+    
+    .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    h3 {
+        font-size: 1.2rem !important;
+    }
+    
+    .fs-5 {
+        font-size: 0.95rem !important;
+    }
+    
+    .badge {
+        font-size: 0.7rem !important;
+        padding: 0.25rem 0.4rem !important;
+    }
+    
+    .btn {
+        font-size: 0.8rem !important;
+        padding: 0.35rem 0.6rem !important;
+    }
+    
+    .btn-sm {
+        font-size: 0.7rem !important;
+        padding: 0.25rem 0.45rem !important;
+    }
+    
+    .form-control {
+        font-size: 0.85rem !important;
+        padding: 0.4rem 0.6rem !important;
+    }
+    
+    .text-muted {
+        font-size: 0.85rem !important;
+    }
+    
+    .text-muted.small {
+        font-size: 0.75rem !important;
+    }
+    
+    .alert {
+        font-size: 0.85rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .d-flex.gap-2 {
+        gap: 0.4rem !important;
+    }
+    
+    .d-flex.gap-3 {
+        gap: 0.6rem !important;
+    }
 }
