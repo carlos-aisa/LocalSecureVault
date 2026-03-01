@@ -23,8 +23,11 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Restore Windows dependencies
+        run: dotnet restore src/Vault.App/Vault.App.csproj -r win-x64 -p:EnableAndroid=false -p:TargetFramework=net8.0-windows10.0.19041.0 -p:TargetFrameworks=net8.0-windows10.0.19041.0 -p:PublishReadyToRun=false
+
       - name: Publish Windows (Release)
-        run: dotnet publish src/Vault.App/Vault.App.csproj -f net8.0-windows10.0.19041.0 -c Release -p:EnableAndroid=false -p:TargetFrameworks=net8.0-windows10.0.19041.0
+        run: dotnet publish src/Vault.App/Vault.App.csproj -f net8.0-windows10.0.19041.0 -r win-x64 -c Release --no-restore -p:EnableAndroid=false -p:TargetFrameworks=net8.0-windows10.0.19041.0 -p:PublishReadyToRun=false
 
       - name: Create Windows zip
         shell: pwsh
@@ -78,11 +81,14 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Install Android workload
-        run: dotnet workload install android
+      - name: Install Android workloads
+        run: dotnet workload install android wasm-tools-net8
+
+      - name: Restore Android dependencies
+        run: dotnet restore src/Vault.App/Vault.App.csproj -p:EnableAndroid=true -p:TargetFrameworks=net8.0-android
 
       - name: Publish Android (Release)
-        run: dotnet publish src/Vault.App/Vault.App.csproj -f net8.0-android -c Release -p:EnableAndroid=true -p:TargetFrameworks=net8.0-android
+        run: dotnet publish src/Vault.App/Vault.App.csproj -f net8.0-android -c Release --no-restore -p:EnableAndroid=true -p:TargetFrameworks=net8.0-android
 
       - name: Collect signed APK
         shell: pwsh
