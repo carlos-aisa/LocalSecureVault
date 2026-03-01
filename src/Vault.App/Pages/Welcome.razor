@@ -4,18 +4,22 @@
 
 <h3>Local Secure Vault</h3>
 
-<p>Manage credentials in a local encrypted file.</p>
+<div class="card mb-3">
+    <div class="card-body p-4">
+        <p class="mb-4">Manage credentials in a local encrypted file.</p>
 
-<div style="display:flex; gap:12px;">
-    @if (ShowCreateButton)
-    {
-        <button class="btn btn-primary" @onclick="GoCreate">Create new vault</button>
-    }
-    <button class="btn btn-secondary" @onclick="GoOpen">Open existing vault</button>
-    @if (State.IsUnlocked)
-    {
-        <button class="btn btn-outline-primary" @onclick="GoVault">Go to Vault</button>
-    }
+        <div class="d-flex flex-wrap gap-2">
+            @if (ShowCreateButton)
+            {
+                <button class="btn btn-primary" @onclick="GoCreate">Create new vault</button>
+            }
+            <button class="btn btn-secondary" @onclick="GoOpen">Open existing vault</button>
+            @if (State.IsUnlocked)
+            {
+                <button class="btn btn-outline-primary" @onclick="GoVault">Go to Vault</button>
+            }
+        </div>
+    </div>
 </div>
 
 @code {

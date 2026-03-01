@@ -13,48 +13,50 @@
 
 <h3>Create new vault</h3>
 
-<div style="max-width:520px;">
-    <div class="mb-3">
-        <label class="form-label">Vault name</label>
-        <input class="form-control" @bind="VaultName" />
-    </div>
+<div class="card" style="max-width: 560px;">
+    <div class="card-body p-4">
+        <div class="mb-3">
+            <label class="form-label">Vault name</label>
+            <input class="form-control" @bind="VaultName" />
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Master password</label>
-        <input class="form-control" type="password" @bind="Password1" />
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Master password</label>
+            <input class="form-control" type="password" @bind="Password1" />
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Repeat master password</label>
-        <input class="form-control" type="password" @bind="Password2" />
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Repeat master password</label>
+            <input class="form-control" type="password" @bind="Password2" />
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">KDF profile</label>
-        <select class="form-select" @bind="Profile">
-            <option value="@KdfProfile.Strong">Strong (recommended)</option>
-            <option value="@KdfProfile.Interactive">Interactive (faster)</option>
-        </select>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">KDF profile</label>
+            <select class="form-select" @bind="Profile">
+                <option value="@KdfProfile.Strong">Strong (recommended)</option>
+                <option value="@KdfProfile.Interactive">Interactive (faster)</option>
+            </select>
+        </div>
 
-    @if (!string.IsNullOrWhiteSpace(Error))
-    {
-        <div class="alert alert-danger">@Error</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="alert alert-danger">@Error</div>
+        }
 
-    @if (!string.IsNullOrWhiteSpace(Success))
-    {
-        <div class="alert alert-success">@Success</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(Success))
+        {
+            <div class="alert alert-success">@Success</div>
+        }
 
-    <div style="display:flex; gap:12px;">
-        <button class="btn btn-primary" @onclick="CreateAndSaveAsync" disabled="@IsBusy">
-            @(IsBusy ? "Creating..." : "Create & Save")
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" @onclick="CreateAndSaveAsync" disabled="@IsBusy">
+                @(IsBusy ? "Creating..." : "Create & Save")
+            </button>
 
-        <button class="btn btn-secondary" @onclick='(() => Nav.NavigateTo("/"))' disabled="@IsBusy">
-            Cancel
-        </button>
+            <button class="btn btn-secondary" @onclick='(() => Nav.NavigateTo("/"))' disabled="@IsBusy">
+                Cancel
+            </button>
+        </div>
     </div>
 </div>
 

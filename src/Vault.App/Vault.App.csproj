@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
-		<!-- 
-			To enable Android build:
-			1. Install Android workload: dotnet workload install android
-			2. Uncomment the next line to add net8.0-android target
+		<!--
+			Android target is enabled by default on Windows.
+			Override with -p:EnableAndroid=false if needed.
 		-->
-    	<!-- <EnableAndroid>true</EnableAndroid> -->
+    <!--<EnableAndroid Condition="'$(EnableAndroid)' == '' and $([MSBuild]::IsOSPlatform('windows'))">true</EnableAndroid> -->
 		
 		<TargetFrameworks>net8.0-windows10.0.19041.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(EnableAndroid)' == 'true'">$(TargetFrameworks);net8.0-android</TargetFrameworks>
@@ -42,10 +41,10 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\appicon.png"/>
+		<MauiIcon Include="Resources\appicon.png" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\appicon.png"/>
+		<MauiSplashScreen Include="Resources\appicon.png" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />

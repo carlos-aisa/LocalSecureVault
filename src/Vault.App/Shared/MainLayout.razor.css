@@ -2,51 +2,119 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    color: var(--vault-on-surface);
 }
 
-main {
+.app-main {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.activity-layer {
+    flex: 1;
+    min-height: 0;
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background:
+        radial-gradient(480px 210px at 12% -8%, rgba(102, 171, 255, 0.3), transparent 62%),
+        linear-gradient(180deg, #0d1f39 0%, #12294d 45%, #0f1f37 100%);
+    border-right: 1px solid color-mix(in srgb, var(--vault-outline) 35%, transparent);
+    box-shadow: 8px 0 24px rgba(4, 12, 24, 0.2);
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+    background: color-mix(in srgb, var(--vault-surface-elevated) 88%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--vault-outline) 78%, transparent);
+    height: 4.15rem;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    backdrop-filter: blur(14px);
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
+.top-row-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+}
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
+.app-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    object-fit: contain;
+    box-shadow: 0 6px 18px rgba(15, 45, 82, 0.2);
+}
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.app-title {
+    font-size: 0.96rem;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.app-subtitle {
+    color: var(--vault-on-surface-variant);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 42vw;
+}
+
+.vault-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 0.34rem 0.72rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.vault-pill .oi {
+    font-size: 0.78rem;
+}
+
+.vault-pill.is-unlocked {
+    background-color: #166a41;
+    border-color: #0f4f30;
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(22, 106, 65, 0.35);
+}
+
+.vault-pill.is-locked {
+    background-color: color-mix(in srgb, var(--vault-warning) 20%, transparent);
+    border-color: color-mix(in srgb, var(--vault-warning) 40%, transparent);
+    color: color-mix(in srgb, var(--vault-warning) 80%, black);
+}
 
 @media (max-width: 640.98px) {
-    .top-row:not(.auth) {
-        display: none;
+    .top-row {
+        height: 3.72rem;
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
     }
 
-    .top-row.auth {
-        justify-content: space-between;
+    .app-logo {
+        width: 28px;
+        height: 28px;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
+    .app-title {
+        font-size: 0.9rem;
+    }
+
+    .vault-pill {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.62rem;
     }
 }
 
@@ -56,7 +124,7 @@ main {
     }
 
     .sidebar {
-        width: 250px;
+        width: 272px;
         height: 100vh;
         position: sticky;
         top: 0;
@@ -65,11 +133,13 @@ main {
     .top-row {
         position: sticky;
         top: 0;
-        z-index: 1;
+        z-index: 2;
+        padding-left: 1.6rem !important;
+        padding-right: 1.35rem !important;
     }
 
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+    article {
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
     }
 }

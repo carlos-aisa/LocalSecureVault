@@ -9,11 +9,22 @@
 		<NavMenu />
 	</div>
 
-	<main>
+	<main class="app-main">
 		<div class="top-row px-4">
-			<img src="appicon.png" alt="Vault" style="height: 28px; width: 28px; object-fit: contain;" />
+            <div class="top-row-brand">
+			    <img src="appicon.png" alt="Vault" class="app-logo" />
+                <div>
+                    <div class="app-title">Local Secure Vault</div>
+                    <div class="app-subtitle">@AppSubtitle</div>
+                </div>
+            </div>
+            <div class="vault-pill @(State.IsUnlocked ? "is-unlocked" : "is-locked")">
+                <span class="oi oi-lock-locked" aria-hidden="true"></span>
+                @(State.IsUnlocked ? "Unlocked" : "Locked")
+            </div>
 		</div>
-		<div @onmousemove="OnUserActivity"
+		<div class="activity-layer"
+            @onmousemove="OnUserActivity"
 			@onkeydown="OnUserActivity"
 			@onclick="OnUserActivity"
 			@ontouchstart="OnUserActivity"
@@ -50,6 +61,10 @@
 
 @code {
     private bool ShowIdleLockModal;
+    private string AppSubtitle =>
+        State.IsUnlocked
+            ? State.UnlockedDocument?.Meta.VaultName ?? "Vault unlocked"
+            : "Encrypted local storage";
 
     protected override void OnInitialized()
     {

@@ -93,4 +93,9 @@ It is a **local personal vault**, secure and controlled by the user.
 - **Transfer method**: Manual (USB, cloud storage, etc.)
 - **Sync strategy**: None - occasional mobile use expected
 
-The architecture documentation and implementation plan are located in `docs/`
+## Documentation
+
+- [Build and publish (generate versions)](docs/build-and-publish.md)
+- [Architecture](docs/arch.md)
+- [File format](docs/file-format.md)
+- [Security tests](docs/security-tests.md)

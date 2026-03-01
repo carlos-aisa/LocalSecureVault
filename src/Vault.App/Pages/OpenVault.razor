@@ -22,7 +22,7 @@
         To open another vault, lock the current one first.
     </div>
 
-    <div style="display:flex; gap:12px;" class="mb-3">
+    <div class="d-flex flex-wrap gap-2 mb-3">
         <button class="btn btn-secondary" @onclick="BackToVault" disabled="@IsBusy">
             Back to vault
         </button>
@@ -35,74 +35,78 @@
     <hr />
 }
 
-@if (HasRecent)
-{
-    <div class="mb-3">
-        <button class="btn btn-outline-primary"
-                @onclick="UseLastVault"
-                disabled="@(IsBusy || State.IsUnlocked)">
-            Open last vault
-        </button>
+<div class="card" style="max-width: 780px;">
+    <div class="card-body p-4">
+        @if (HasRecent)
+        {
+            <div class="mb-3">
+                <button class="btn btn-outline-primary"
+                        @onclick="UseLastVault"
+                        disabled="@(IsBusy || State.IsUnlocked)">
+                    Open last vault
+                </button>
 
-        <div class="form-text">
-            Last opened vault: <code>@RecentPathHint</code>
+                <div class="form-text">
+                    Last opened vault: <code>@RecentPathHint</code>
+                </div>
+            </div>
+        }
+
+        @if (ShowBiometricButton && !State.IsUnlocked)
+        {
+            <div class="mb-3">
+                <button class="btn btn-success"
+                        @onclick="UnlockWithBiometricAsync"
+                        disabled="@IsBusy">
+                    Unlock with fingerprint
+                </button>
+                <div class="form-text text-muted">
+                    Use your fingerprint to unlock the vault
+                </div>
+            </div>
+        }
+
+        <div class="mb-3">
+            <label class="form-label">Vault file</label>
+
+            <div class="d-flex flex-wrap gap-2">
+                <input class="form-control"
+                       @bind="VaultPath" @bind:event="oninput"
+                       @onkeypress="HandleKeyPress"
+                       disabled="@(IsBusy || State.IsUnlocked)" />
+
+                <button class="btn btn-outline-secondary"
+                        @onclick="BrowseAsync"
+                        disabled="@(IsBusy || State.IsUnlocked)">
+                    Browse...
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Master password</label>
+            <input type="password"
+                   class="form-control"
+                   @bind="Password" @bind:event="oninput"
+                   @onkeypress="HandleKeyPress"
+                   disabled="@(IsBusy || State.IsUnlocked)" />
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary"
+                    @onclick="OpenAsync"
+                    disabled="@(IsBusy
+                        || State.IsUnlocked
+                        || string.IsNullOrWhiteSpace(VaultPath)
+                        || string.IsNullOrWhiteSpace(Password))">
+                Open vault
+            </button>
+
+            <button class="btn btn-secondary" @onclick="Cancel" disabled="@IsBusy">
+                Cancel
+            </button>
         </div>
     </div>
-}
-
-@if (ShowBiometricButton && !State.IsUnlocked)
-{
-    <div class="mb-3">
-        <button class="btn btn-success"
-                @onclick="UnlockWithBiometricAsync"
-                disabled="@IsBusy">
-                Unlock with fingerprint
-        </button>
-        <div class="form-text text-muted">
-            Use your fingerprint to unlock the vault
-        </div>
-    </div>
-}
-
-<div class="mb-3">
-    <label class="form-label">Vault file</label>
-
-    <div style="display:flex; gap:12px;">
-        <input class="form-control"
-               @bind="VaultPath" @bind:event="oninput"
-               @onkeypress="HandleKeyPress"
-               disabled="@(IsBusy || State.IsUnlocked)" />
-
-        <button class="btn btn-outline-secondary"
-                @onclick="BrowseAsync"
-                disabled="@(IsBusy || State.IsUnlocked)">
-            Browse…
-        </button>
-    </div>
-</div>
-
-<div class="mb-3">
-    <label class="form-label">Master password</label>
-    <input type="password"
-           class="form-control"
-           @bind="Password" @bind:event="oninput"
-           @onkeypress="HandleKeyPress"
-           disabled="@(IsBusy || State.IsUnlocked)" />
-</div>
-
-<div style="display:flex; gap:12px;">
-    <button class="btn btn-primary"
-            @onclick="OpenAsync"
-            disabled="@(IsBusy
-                || State.IsUnlocked
-                || string.IsNullOrWhiteSpace(VaultPath)
-                || string.IsNullOrWhiteSpace(Password))">
-        Open vault
-    </button>
-
-    <button class="btn btn-secondary" @onclick="Cancel" disabled="@IsBusy">
-        Cancel
-    </button>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Error))
