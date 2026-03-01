@@ -23,3 +23,9 @@ public sealed class MauiVaultFilePicker : IVaultFilePicker
         return result?.FullPath;
     }
 }
+
+public sealed class NullVaultExportPicker : IVaultExportPicker
+{
+    public Task<string?> PickExportDestinationAsync(string suggestedFileName, CancellationToken ct = default)
+        => Task.FromResult<string?>(null);
+}

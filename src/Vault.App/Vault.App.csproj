@@ -5,7 +5,7 @@
 			Android target is enabled by default on Windows.
 			Override with -p:EnableAndroid=false if needed.
 		-->
-    <!--<EnableAndroid Condition="'$(EnableAndroid)' == '' and $([MSBuild]::IsOSPlatform('windows'))">true</EnableAndroid> -->
+		<EnableAndroid Condition="'$(EnableAndroid)' == '' and '$(OS)' == 'Windows_NT'">true</EnableAndroid>
 		
 		<TargetFrameworks>net8.0-windows10.0.19041.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(EnableAndroid)' == 'true'">$(TargetFrameworks);net8.0-android</TargetFrameworks>
@@ -38,6 +38,25 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 		<ApplicationIcon Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">Resources\appicon.ico</ApplicationIcon>
 	</PropertyGroup>
+
+	<!-- Windows Release publish defaults: self-contained distribution -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows10.0.19041.0' and '$(Configuration)' == 'Release'">
+		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>false</PublishSingleFile>
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>none</DebugType>
+		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+	</PropertyGroup>
+
+	<Target Name="PruneWindowsPublishArtifacts"
+			AfterTargets="Publish"
+			Condition="'$(TargetFramework)' == 'net8.0-windows10.0.19041.0' and '$(Configuration)' == 'Release'">
+		<ItemGroup>
+			<_PublishPdbFiles Include="$(PublishDir)**\*.pdb" />
+		</ItemGroup>
+		<Delete Files="@(_PublishPdbFiles)" TreatErrorsAsWarnings="true" />
+	</Target>
 
 	<ItemGroup>
 		<!-- App Icon -->

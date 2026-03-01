@@ -87,14 +87,25 @@ dotnet run --project src\Vault.App\Vault.App.csproj --framework net8.0-windows10
 For distribution without requiring .NET installed on target machines:
 
 ```powershell
-dotnet publish src\Vault.App\Vault.App.csproj -f net8.0-windows10.0.19041.0 -c Release -r win-x64 --self-contained
+dotnet publish src\Vault.App\Vault.App.csproj -f net8.0-windows10.0.19041.0 -c Release
 ```
 
 **Output location:** `src\Vault.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\`
 
 **Executable:** `Vault.App.exe`
 
-**Distribution:** Copy the entire `publish` folder to the target machine. The application is fully self-contained and includes the .NET runtime (~100-150 MB).
+**Important (MAUI/WinUI):** The publish output includes resource/runtime folders (for example locales and framework assets).  
+This is expected for a stable unpackaged desktop distribution.
+
+**Symbols:** `.pdb` files are excluded from publish output.
+
+**Static Web Assets:** `Vault.App.staticwebassets.endpoints.json` is kept because it is required by the Blazor Hybrid static assets pipeline.
+
+**Distribution:** Copy the entire `publish` folder to the target machine.
+
+### Optional: Single Installable File (MSIX)
+
+If your real requirement is "deliver one file", prefer generating an `.msix` installer package (one file), instead of an unpackaged `.exe`.
 
 **Alternative: Framework-Dependent Build**
 
@@ -127,10 +138,12 @@ dotnet build src\Vault.App\Vault.App.csproj -f net8.0-android -c Release
 #### Setup Emulator or Physical Device
 
 **Android Emulator:**
+
 1. Open Android Studio → Tools → AVD Manager
 2. Create or start a virtual device (API 23 or higher)
 
 **Physical Device:**
+
 1. Enable Developer Mode on your Android device
 2. Enable USB Debugging in Developer Options
 3. Connect device via USB
@@ -162,6 +175,7 @@ dotnet publish src\Vault.App\Vault.App.csproj -f net8.0-android -c Release
 **Output location:** `src\Vault.App\bin\Release\net8.0-android\`
 
 **Generated Files:**
+
 - `com.carlosaredo.vault.app-Signed.apk` - For direct installation on devices (sideloading)
 - `com.carlosaredo.vault.app-Signed.aab` - For Google Play Store distribution
 
@@ -272,30 +286,54 @@ Ensure Windows 10 version 1809 (build 17763) or later.
 
 ---
 
+## GitHub Releases Automation
+
+This repository includes a workflow at `.github/workflows/release-artifacts.yml` that:
+
+- Builds a **Windows** Release package and uploads it as a `.zip`
+- Builds an **Android companion** Release package and uploads the signed `.apk`
+- Publishes both files into **GitHub Releases**
+
+### Trigger
+
+- Automatic when pushing a tag that starts with `v` (for example `v1.0.0`)
+- Manual via **Actions -> Release Artifacts -> Run workflow**
+
+### Notes
+
+- Android output is a signed APK suitable for sideloading/distribution.
+- For Google Play, use your production signing keystore process.
+
+---
+
 ## Quick Reference
 
 ### Most Common Commands
 
 **Windows Development:**
+
 ```powershell
 dotnet run --project src\Vault.App\Vault.App.csproj --framework net8.0-windows10.0.19041.0
 ```
 
 **Windows Distribution:**
+
 ```powershell
-dotnet publish src\Vault.App\Vault.App.csproj -f net8.0-windows10.0.19041.0 -c Release -r win-x64 --self-contained
+dotnet publish src\Vault.App\Vault.App.csproj -f net8.0-windows10.0.19041.0 -c Release
 ```
 
 **Android Development:**
+
 ```powershell
 dotnet build -t:Run -f net8.0-android src\Vault.App\Vault.App.csproj
 ```
 
 **Android Distribution:**
+
 ```powershell
 dotnet publish src\Vault.App\Vault.App.csproj -f net8.0-android -c Release
 ```
 
 ---
 
-**Last Updated:** January 1, 2026
+**Last Updated:** March 1, 2026

@@ -6,6 +6,7 @@
 @inject NavigationManager Nav
 @inject VaultAppService App
 @inject SearchService SearchService
+@inject IVaultExportPicker ExportPicker
 
 @inject ClipboardService Clipboard
 
@@ -17,6 +18,10 @@
     {
         <div class="d-flex flex-wrap gap-2">
             <button class="btn btn-success" @onclick="SaveAsync" disabled="@(!State.IsDirty || IsBusy)">Save</button>
+            @if (ShowExportButton)
+            {
+                <button class="btn btn-outline-primary" @onclick="ExportAsync" disabled="@IsBusy">Export</button>
+            }
             <button class="btn btn-outline-danger" @onclick="LockVault">Lock</button>
         </div>
     }
@@ -38,13 +43,12 @@
 @* CONTROLS - Search and entry actions *@
 <div class="card mb-3">
     <div class="card-body py-3">
-        <div class="d-flex flex-column flex-lg-row gap-2 align-items-stretch">
-            <input class="form-control" placeholder="Search entries..."
+        <div class="d-flex flex-column flex-lg-row gap-2 align-items-start align-items-lg-center vault-toolbar">
+            <input class="form-control vault-search-input" placeholder="Search entries..."
                    @bind="Search" @bind:event="oninput" />
             
-            <div class="d-flex flex-wrap gap-2">
-                <button class="btn btn-primary" @onclick="NewEntry">Add Entry</button>
-                <button class="btn btn-outline-secondary" @onclick="GoImport">Import</button>
+            <div class="d-flex gap-2 vault-toolbar-actions ms-lg-auto justify-content-end">
+                <button class="btn btn-primary vault-add-entry-btn" @onclick="NewEntry">Add Entry</button>
             </div>
         </div>
     </div>
@@ -156,6 +160,8 @@ else
 }
 
 @code {
+    private bool ShowExportButton => OperatingSystem.IsAndroid();
+
     private string? Error;
     private string Search = "";
 
@@ -189,8 +195,6 @@ else
         }
     }
     
-    private void GoImport() => Nav.NavigateTo("/import");
-
     private void NewEntry()
     {
         Error = null;
@@ -316,6 +320,62 @@ else
             IsBusy = false;
         }
     }
+
+    private async Task ExportAsync()
+    {
+        SaveMsg = null;
+        Error = null;
+
+        if (State.UnlockedDocument is null || State.SessionKey is null || State.CurrentHeader is null)
+        {
+            Error = "No unlocked vault to export.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var suggestedName = BuildSuggestedExportName();
+            var destination = await ExportPicker.PickExportDestinationAsync(suggestedName);
+            if (string.IsNullOrWhiteSpace(destination))
+                return;
+
+            var res = await App.SaveAsync(
+                destination,
+                State.UnlockedDocument,
+                State.SessionKey,
+                State.CurrentHeader);
+
+            if (!res.IsSuccess)
+            {
+                Error = res.Error!.UserMessage;
+                return;
+            }
+
+            SaveMsg = "Export completed.";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private string BuildSuggestedExportName()
+    {
+        var name = State.UnlockedDocument?.Meta.VaultName;
+        if (string.IsNullOrWhiteSpace(name))
+            return "vault-export.vlt";
+
+        foreach (var c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+
+        name = name.Trim();
+        if (!name.EndsWith(".vlt", StringComparison.OrdinalIgnoreCase))
+            name += ".vlt";
+
+        return string.IsNullOrWhiteSpace(name) ? "vault-export.vlt" : name;
+    }
+
     private async Task CopyPasswordAsync(Guid id)
     {
         Error = null;
