@@ -24,10 +24,10 @@ jobs:
           global-json-file: global.json
 
       - name: Restore Windows dependencies
-        run: dotnet restore src/Vault.App/Vault.App.csproj -r win-x64 -p:EnableAndroid=false -p:TargetFramework=net8.0-windows10.0.19041.0 -p:TargetFrameworks=net8.0-windows10.0.19041.0
+        run: dotnet restore src/Vault.App/Vault.App.csproj -r win-x64 -p:EnableAndroid=false -p:TargetFramework=net8.0-windows10.0.19041.0 -p:TargetFrameworks=net8.0-windows10.0.19041.0 -p:PublishReadyToRun=false
 
       - name: Publish Windows (Release)
-        run: dotnet publish src/Vault.App/Vault.App.csproj -f net8.0-windows10.0.19041.0 -r win-x64 -c Release --no-restore -p:EnableAndroid=false -p:TargetFrameworks=net8.0-windows10.0.19041.0
+        run: dotnet publish src/Vault.App/Vault.App.csproj -f net8.0-windows10.0.19041.0 -r win-x64 -c Release --no-restore -p:EnableAndroid=false -p:TargetFrameworks=net8.0-windows10.0.19041.0 -p:PublishReadyToRun=false
 
       - name: Create Windows zip
         shell: pwsh
