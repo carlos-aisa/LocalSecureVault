@@ -47,7 +47,7 @@
                 </button>
 
                 <div class="form-text">
-                    Last opened vault: <code>@RecentPathHint</code>
+                    Last opened vault: <code>@RecentPathDisplay</code>
                 </div>
             </div>
         }
@@ -120,6 +120,7 @@
     private string? Error;
     private bool IsBusy;
     private string? RecentPathHint;
+    private string RecentPathDisplay => FormatPathDisplay(RecentPathHint);
     private bool HasRecent => !string.IsNullOrWhiteSpace(RecentPathHint);
     private bool ShowBiometricButton;
     private bool BiometricAvailable;
@@ -292,4 +293,26 @@
     }
 
     private void Cancel() => Nav.NavigateTo("/");
+
+    private string FormatPathDisplay(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return string.Empty;
+
+#if ANDROID
+        if (path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Picker is AndroidVaultFilePicker androidPicker)
+            {
+                var displayName = androidPicker.TryGetDisplayName(path);
+                if (!string.IsNullOrWhiteSpace(displayName))
+                    return displayName;
+            }
+
+            return "Android document";
+        }
+#endif
+
+        return path;
+    }
 }

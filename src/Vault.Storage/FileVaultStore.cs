@@ -158,12 +158,16 @@ public sealed class FileVaultStore : IVaultStore
         if (uri == null)
             throw new ArgumentException($"Invalid content URI: {uriString}");
 
-        // Write to content URI (truncates existing content)
-        using var outputStream = contentResolver.OpenOutputStream(uri, "wt"); // "wt" = write truncate
+        // Prefer "rwt" (read/write/truncate) for better compatibility when overwriting documents.
+        var outputStream = contentResolver.OpenOutputStream(uri, "rwt")
+                         ?? contentResolver.OpenOutputStream(uri, "wt");
         if (outputStream == null)
             throw new IOException($"Could not open output stream for URI: {uriString}");
 
-        await WriteToStreamAsync(outputStream, file, ct);
+        await using (outputStream)
+        {
+            await WriteToStreamAsync(outputStream, file, ct);
+        }
     }
 #endif
 

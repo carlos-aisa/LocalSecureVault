@@ -24,6 +24,7 @@ public class MainActivity : MauiAppCompatActivity
         
 #if ANDROID
         Services.AndroidVaultFilePicker.OnActivityResult(requestCode, resultCode, data);
+        Services.AndroidVaultExportPicker.OnActivityResult(requestCode, resultCode, data);
 #endif
     }
 }
