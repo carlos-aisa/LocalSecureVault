@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore LocalSecureVault.sln
+
+      - name: Build core projects
+        run: |
+          dotnet build src/Vault.Domain/Vault.Domain.csproj -c Release --no-restore
+          dotnet build src/Vault.Application/Vault.Application.csproj -c Release --no-restore
+          dotnet build src/Vault.Crypto/Vault.Crypto.csproj -c Release --no-restore
+          dotnet build src/Vault.Storage/Vault.Storage.csproj -c Release --no-restore
+
+      - name: Test (net8.0)
+        run: dotnet test tests/Vault.Tests/Vault.Tests.csproj -f net8.0 -c Release --no-build --verbosity normal

@@ -134,6 +134,12 @@ jobs:
           name: android-package
           path: release-assets/android
 
+      - name: Generate SHA256 checksums
+        shell: bash
+        run: |
+          cd release-assets
+          find . -type f \( -name "*.zip" -o -name "*.apk" \) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+
       - name: Create GitHub release and upload assets
         uses: softprops/action-gh-release@v2
         with:
@@ -141,3 +147,4 @@ jobs:
           files: |
             release-assets/windows/*.zip
             release-assets/android/*.apk
+            release-assets/SHA256SUMS.txt

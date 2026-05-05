@@ -1,0 +1,46 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "34 2 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (CSharp)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build for analysis
+        run: |
+          dotnet restore LocalSecureVault.sln
+          dotnet build src/Vault.Domain/Vault.Domain.csproj -c Release --no-restore
+          dotnet build src/Vault.Application/Vault.Application.csproj -c Release --no-restore
+          dotnet build src/Vault.Crypto/Vault.Crypto.csproj -c Release --no-restore
+          dotnet build src/Vault.Storage/Vault.Storage.csproj -c Release --no-restore
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
