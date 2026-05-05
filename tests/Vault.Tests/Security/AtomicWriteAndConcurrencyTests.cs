@@ -27,11 +27,33 @@ public class AtomicWriteAndConcurrencyTests
             {
                 var newHeader = CreateValidHeader();
                 var newFile = new VaultFile(newHeader, new byte[] { 4, 5, 6, 7 }, new byte[VaultFormatConstants.TagSize]);
-                await Assert.ThrowsAnyAsync<Exception>(() => store.WriteAtomicAsync(temp, newFile));
+                var writeThrew = false;
+                try
+                {
+                    await store.WriteAtomicAsync(temp, newFile);
+                }
+                catch
+                {
+                    writeThrew = true;
+                }
+
                 fileInfo.IsReadOnly = false;
                 var afterFailed = await store.ReadAsync(temp);
                 Assert.NotNull(afterFailed);
-                Assert.Equal(original.Ciphertext, afterFailed.Ciphertext);
+
+                // On Windows, replacing a read-only destination commonly throws.
+                // On Linux/macOS, replace via rename can still succeed if directory permissions allow it.
+                if (writeThrew)
+                {
+                    Assert.Equal(original.Ciphertext, afterFailed.Ciphertext);
+                }
+                else
+                {
+                    Assert.Equal(newFile.Ciphertext, afterFailed.Ciphertext);
+                }
+
+                if (OperatingSystem.IsWindows())
+                    Assert.True(writeThrew);
             }
             finally
             {
