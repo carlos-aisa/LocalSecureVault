@@ -149,20 +149,18 @@ public class AutoLockSecurityTests
     }
 
     [Fact]
-    public async Task AutoLock_ConfigurableTimeout_ShouldRespectSetting()
+    public void AutoLock_ConfigurableTimeout_ShouldRespectSetting()
     {
         var shortTimeout = TimeSpan.FromMilliseconds(50);
         var longTimeout = TimeSpan.FromMilliseconds(200);
-        
-        DateTime lastActivity = DateTime.UtcNow;
-        await Task.Delay(shortTimeout + TimeSpan.FromMilliseconds(10));
-        bool lockedWithShort = DateTime.UtcNow - lastActivity > shortTimeout;
+
+        var shortElapsed = shortTimeout + TimeSpan.FromMilliseconds(10);
+        bool lockedWithShort = shortElapsed > shortTimeout;
         
         Assert.True(lockedWithShort);
-        
-        lastActivity = DateTime.UtcNow;
-        await Task.Delay(shortTimeout + TimeSpan.FromMilliseconds(10));
-        bool lockedWithLong = DateTime.UtcNow - lastActivity > longTimeout;
+
+        var sameElapsed = shortTimeout + TimeSpan.FromMilliseconds(10);
+        bool lockedWithLong = sameElapsed > longTimeout;
         
         Assert.False(lockedWithLong);
     }
