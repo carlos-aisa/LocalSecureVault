@@ -42,4 +42,4 @@ jobs:
           dotnet build src/Vault.Storage/Vault.Storage.csproj -f net8.0 -c Release --no-restore
 
       - name: Test (net8.0)
-        run: dotnet test tests/Vault.Tests/Vault.Tests.csproj -f net8.0 -c Release --no-build --verbosity normal
+        run: dotnet test tests/Vault.Tests/Vault.Tests.csproj -f net8.0 -c Release --no-restore --verbosity normal
