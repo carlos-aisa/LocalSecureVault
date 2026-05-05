@@ -36,11 +36,11 @@ jobs:
 
       - name: Build for analysis
         run: |
-          dotnet restore LocalSecureVault.sln
-          dotnet build src/Vault.Domain/Vault.Domain.csproj -c Release --no-restore
-          dotnet build src/Vault.Application/Vault.Application.csproj -c Release --no-restore
-          dotnet build src/Vault.Crypto/Vault.Crypto.csproj -c Release --no-restore
-          dotnet build src/Vault.Storage/Vault.Storage.csproj -c Release --no-restore
+          dotnet restore tests/Vault.Tests/Vault.Tests.csproj -p:TargetFramework=net8.0
+          dotnet build src/Vault.Domain/Vault.Domain.csproj -f net8.0 -c Release --no-restore
+          dotnet build src/Vault.Application/Vault.Application.csproj -f net8.0 -c Release --no-restore
+          dotnet build src/Vault.Crypto/Vault.Crypto.csproj -f net8.0 -c Release --no-restore
+          dotnet build src/Vault.Storage/Vault.Storage.csproj -f net8.0 -c Release --no-restore
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

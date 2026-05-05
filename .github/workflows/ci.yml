@@ -31,15 +31,15 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Restore
-        run: dotnet restore LocalSecureVault.sln
+      - name: Restore (net8.0 only)
+        run: dotnet restore tests/Vault.Tests/Vault.Tests.csproj -p:TargetFramework=net8.0
 
       - name: Build core projects
         run: |
-          dotnet build src/Vault.Domain/Vault.Domain.csproj -c Release --no-restore
-          dotnet build src/Vault.Application/Vault.Application.csproj -c Release --no-restore
-          dotnet build src/Vault.Crypto/Vault.Crypto.csproj -c Release --no-restore
-          dotnet build src/Vault.Storage/Vault.Storage.csproj -c Release --no-restore
+          dotnet build src/Vault.Domain/Vault.Domain.csproj -f net8.0 -c Release --no-restore
+          dotnet build src/Vault.Application/Vault.Application.csproj -f net8.0 -c Release --no-restore
+          dotnet build src/Vault.Crypto/Vault.Crypto.csproj -f net8.0 -c Release --no-restore
+          dotnet build src/Vault.Storage/Vault.Storage.csproj -f net8.0 -c Release --no-restore
 
       - name: Test (net8.0)
         run: dotnet test tests/Vault.Tests/Vault.Tests.csproj -f net8.0 -c Release --no-build --verbosity normal
