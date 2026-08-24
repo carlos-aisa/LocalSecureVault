@@ -46,7 +46,9 @@ with the primary action at the natural thumb position.
 
 The vault list uses full-width, pressable entry cards. Each card presents an
 initial or icon, entry name, concise secondary identity, attachment count, and
-a chevron. Selecting it opens a focused read-only entry detail surface.
+a chevron. A prominent search field remains available immediately after the
+vault is unlocked and filters entries by name and tags. Selecting an entry
+opens a focused read-only entry detail surface.
 
 The detail surface groups credentials, notes, tags, and attachments. Copying a
 password is a prominent contextual action with confirmation feedback. Images
