@@ -35,6 +35,7 @@ public static class MauiProgram
 
 		// Platform-specific file picker
 #if ANDROID
+		builder.Services.AddSingleton<IVaultStore, AndroidVaultStore>();
 		builder.Services.AddSingleton<IVaultFilePicker, AndroidVaultFilePicker>();
 		builder.Services.AddSingleton<IVaultExportPicker, AndroidVaultExportPicker>();
 #else
@@ -52,7 +53,9 @@ public static class MauiProgram
 #endif
 
 		builder.Services.AddSingleton<ICryptoProvider, CryptoProvider>();
+#if !ANDROID
 		builder.Services.AddSingleton<IVaultStore, FileVaultStore>();
+#endif
 		builder.Services.AddSingleton<IVaultPayloadSerializer, JsonVaultPayloadSerializer>();
 		builder.Services.AddSingleton<IVaultCryptoService, VaultCryptoService>();
 		builder.Services.AddSingleton<IRecentVaultPathStore, PreferencesRecentVaultPathStore>();

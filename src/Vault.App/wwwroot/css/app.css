@@ -566,12 +566,18 @@ textarea.form-control:focus {
   .android-companion .card { background: #ffffff; border: 1px solid #e7e2f3; box-shadow: 0 5px 16px rgba(65,50,125,.08); }
   .android-companion .btn-primary { background: #5a49ad; border-color: #5a49ad; }
   .android-companion .btn-secondary { background: #f0edff; border-color: #ded7fb; }
+  .android-companion .btn-secondary:disabled { opacity:1 !important; color:#5f596f !important; background:#f0edff; border-color:#ded7fb; }
   .android-companion .form-control { background: #ffffff; border-color: #dcd6ea; }
-  .companion-vault-header { padding: 1rem; margin: -.35rem -.15rem 1rem !important; border-radius: 0 0 28px 28px; background:#5a49ad; color:white; }
+  .companion-vault-header { padding: 1rem; margin: .35rem -.15rem 1rem !important; border-radius: 28px; background:#5a49ad; color:white; }
   .companion-vault-header h3,.companion-vault-header .companion-overline { color:white; }
+  .companion-vault-header .btn-outline-danger { color:#ffffff; border-color:rgba(255,255,255,.72); background:transparent; }
+  .companion-vault-header .btn-outline-danger:hover,
+  .companion-vault-header .btn-outline-danger:focus { color:#ffffff !important; border-color:#ffffff; background:rgba(255,255,255,.14); }
   .companion-entry-card { border:1px solid #e7e2f3; box-shadow:0 5px 16px rgba(65,50,125,.08); }
   .companion-entry-card .card-body { padding:1rem !important; }
-  .companion-detail-sheet { border-radius:28px 28px 0 0; margin-top:20vh; }
+  .modal:has(.companion-detail-sheet) .modal-dialog { position:absolute; top:50%; left:50%; width:min(80vw, 520px); max-width:520px; height:auto; max-height:calc(100dvh - 2rem); margin:0; transform:translate(-50%, -50%); }
+  .modal:has(.companion-detail-sheet) .modal-content { max-height:calc(100dvh - 2rem); }
+  .companion-detail-sheet { border-radius:28px; }
   .companion-screen { padding-top: .65rem; }
   .companion-hero { padding:1rem 0 1.25rem; }
   .companion-hero h3 { margin:.15rem 0; }
