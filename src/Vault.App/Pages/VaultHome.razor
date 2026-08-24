@@ -11,8 +11,8 @@
 @inject ClipboardService Clipboard
 
 @* HEADER - Title and global actions *@
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h3 class="mb-0">Vault</h3>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 @(IsReadOnlyCompanion ? "companion-vault-header" : "")">
+    <div><div class="companion-overline">@(IsReadOnlyCompanion ? "Your secure space" : "")</div><h3 class="mb-0">@(IsReadOnlyCompanion ? State.UnlockedDocument?.Meta.VaultName ?? "Vault" : "Vault")</h3></div>
     
     @if (State.UnlockedDocument is not null)
     {
@@ -75,7 +75,7 @@ else
     <div class="d-flex flex-column gap-2" style="max-width: 100%; overflow-x: hidden;">
         @foreach (var e in EntriesFiltered)
         {
-            <div class="card">
+            <div class="card @(IsReadOnlyCompanion ? "companion-entry-card" : "")">
                 <div class="card-body py-3" style="display: flex; flex-direction: column;">
                     @* First row: Name + Tags *@
                     <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap" style="flex-shrink: 0;">
@@ -129,6 +129,10 @@ else
                             <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(e.Id)">Edit</button>
                             <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(e.Id)">Delete</button>
                         }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenEntryDetail(e)">View</button>
+                        }
                     </div>
                 </div>
             </div>
@@ -174,6 +178,24 @@ else
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @onclick="CloseDelete">Cancel</button>
                     <button class="btn btn-danger" @onclick="DeleteNow">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (SelectedEntry is not null)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-label="Entry details">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content companion-detail-sheet">
+                <div class="modal-header"><h5 class="modal-title">@SelectedEntry.Name</h5><button type="button" class="btn-close" @onclick="CloseEntryDetail" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrWhiteSpace(SelectedEntry.Username)) { <div class="mb-3"><div class="companion-overline">Username</div><div>@SelectedEntry.Username</div></div> }
+                    <div class="mb-3"><div class="companion-overline">Password</div><button class="btn btn-primary w-100 mt-1" @onclick="() => CopyPasswordAsync(SelectedEntry.Id)">@(CopiedId == SelectedEntry.Id ? "Copied" : "Copy password")</button></div>
+                    @if (!string.IsNullOrWhiteSpace(SelectedEntry.Notes)) { <div class="mb-3"><div class="companion-overline">Notes</div><div>@SelectedEntry.Notes</div></div> }
+                    @if (SelectedEntry.Attachments.Count > 0) { <div class="companion-overline mb-2">Attachments</div>@foreach (var attachment in SelectedEntry.Attachments) { <button class="btn btn-outline-primary w-100 mb-2 text-start" @onclick="() => ViewAttachment(attachment)">View @attachment.FileName</button> } }
                 </div>
             </div>
         </div>
@@ -230,6 +252,7 @@ else
     private Guid? CopiedId;
     private CancellationTokenSource? _copyCts;
     private Vault.Domain.VaultAttachment? PreviewAttachment;
+    private Vault.Domain.VaultEntry? SelectedEntry;
 
     private IReadOnlyList<Vault.Domain.VaultEntry> EntriesFiltered =>
         SearchService.Search(State.UnlockedDocument!, new SearchQuery(Search));
@@ -452,6 +475,8 @@ else
     }
 
     private void ViewAttachment(Vault.Domain.VaultAttachment attachment) => PreviewAttachment = attachment;
+    private void OpenEntryDetail(Vault.Domain.VaultEntry entry) => SelectedEntry = entry;
+    private void CloseEntryDetail() => SelectedEntry = null;
 
     private void ClosePreview() => PreviewAttachment = null;
 

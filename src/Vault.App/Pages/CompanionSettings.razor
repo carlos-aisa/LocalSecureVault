@@ -1,0 +1,26 @@
+@page "/settings"
+@inject AppState State
+@inject NavigationManager Nav
+
+<div class="companion-screen">
+    <div class="companion-hero">
+        <div class="companion-overline">Companion</div>
+        <h3>Settings</h3>
+        <p>Manage this read-only vault session.</p>
+    </div>
+    <div class="card companion-setting-card">
+        <div class="card-body">
+            <div class="fw-semibold">Vault session</div>
+            <p class="small mb-3">Locking removes decrypted information from this device.</p>
+            <button class="btn btn-outline-danger w-100" @onclick="Lock">Lock vault</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void Lock()
+    {
+        State.Lock();
+        Nav.NavigateTo("/");
+    }
+}
