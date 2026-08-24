@@ -158,6 +158,15 @@ public sealed class VaultAppService
     public VaultResult<Guid> AddEntry(VaultDocument doc, VaultEntry entry, DateTimeOffset? nowUtc = null)
     => _entries.Add(doc, entry, nowUtc);
 
+    public VaultResult<Guid> AddAttachment(VaultDocument doc, Guid entryId, VaultAttachment attachment, DateTimeOffset? nowUtc = null)
+        => _entries.AddAttachment(doc, entryId, attachment, nowUtc);
+
+    public VaultResult<Unit> ReplaceAttachment(VaultDocument doc, Guid entryId, Guid attachmentId, VaultAttachment replacement, DateTimeOffset? nowUtc = null)
+        => _entries.ReplaceAttachment(doc, entryId, attachmentId, replacement, nowUtc);
+
+    public VaultResult<Unit> DeleteAttachment(VaultDocument doc, Guid entryId, Guid attachmentId, DateTimeOffset? nowUtc = null)
+        => _entries.DeleteAttachment(doc, entryId, attachmentId, nowUtc);
+
     public VaultResult<Unit> UpdateEntry(
         VaultDocument doc,
         Guid id,
@@ -167,8 +176,9 @@ public sealed class VaultAppService
         string? url,
         string? notes,
         IReadOnlyList<string> tags,
+        IReadOnlyList<VaultAttachment>? attachments = null,
         DateTimeOffset? nowUtc = null)
-        => _entries.Update(doc, id, name, password, username, url, notes, tags, nowUtc);
+        => _entries.Update(doc, id, name, password, username, url, notes, tags, attachments, nowUtc);
         
         public VaultResult<Unit> DeleteEntry(VaultDocument doc, Guid id, DateTimeOffset? nowUtc = null)
             => _entries.Delete(doc, id, nowUtc);

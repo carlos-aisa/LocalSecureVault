@@ -18,6 +18,8 @@ PDF documents.
 - Supported types are JPEG, PNG, GIF, WebP, and PDF.
 - Existing vault files and entries without attachments remain readable without
   a mandatory migration.
+- The Android companion remains read-only: it displays attachments but does not
+  offer add, replace, delete, or entry-editing actions.
 
 ## Domain model
 
@@ -67,7 +69,9 @@ The section provides:
   validates size and type before adding the attachment.
 - Each attachment displays its filename and type. Images additionally show a
   thumbnail and can be opened at a larger size.
-- PDFs are opened using the native platform viewer.
+- PDFs open in a Bootstrap preview modal when the platform WebView supports PDF
+  rendering. The attachment remains in memory and is not written to a
+  plaintext temporary file.
 - **Replace** selects another valid file for the same attachment.
 - **Delete** removes the selected attachment after an explicit confirmation.
 - User-facing errors explain unsupported type, excessive size, five-item limit,

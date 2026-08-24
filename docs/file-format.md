@@ -53,6 +53,7 @@ File layout:
       "url": "https://github.com",
       "notes": "",
       "tags": ["dev","personal"],
+      "attachments": [{ "id": "â€¦", "fileName": "receipt.pdf", "mediaType": "application/pdf", "content": "base64â€¦", "createdUtc": "â€¦" }],
       "createdUtc": "…",
       "updatedUtc": "…"
     }

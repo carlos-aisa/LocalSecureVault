@@ -9,10 +9,12 @@ public sealed class VaultEntry
     public string? Url { get; private set; }
     public string? Notes { get; private set; }
     public IReadOnlyCollection<string> Tags => _tags.AsReadOnly();
+    public IReadOnlyList<VaultAttachment> Attachments => _attachments.AsReadOnly();
     public DateTimeOffset CreatedUtc { get; }
     public DateTimeOffset UpdatedUtc { get; private set; }
 
     private readonly List<string> _tags;
+    private readonly List<VaultAttachment> _attachments;
 
     internal VaultEntry(
         Guid id,
@@ -23,7 +25,8 @@ public sealed class VaultEntry
         string? notes,
         IEnumerable<string>? tags,
         DateTimeOffset createdUtc,
-        DateTimeOffset updatedUtc)
+        DateTimeOffset updatedUtc,
+        IEnumerable<VaultAttachment>? attachments = null)
     {
         Id = id;
         Name = name;
@@ -32,6 +35,7 @@ public sealed class VaultEntry
         Url = url;
         Notes = notes;
         _tags = NormalizeTags(tags);
+        _attachments = NormalizeAttachments(attachments);
         CreatedUtc = createdUtc;
         UpdatedUtc = updatedUtc;
     }
@@ -43,7 +47,8 @@ public sealed class VaultEntry
         string? url = null,
         string? notes = null,
         IEnumerable<string>? tags = null,
-        DateTimeOffset? nowUtc = null)
+        DateTimeOffset? nowUtc = null,
+        IEnumerable<VaultAttachment>? attachments = null)
     {
         var now = nowUtc ?? DateTimeOffset.UtcNow;
 
@@ -56,7 +61,16 @@ public sealed class VaultEntry
             notes: NormalizeOptional(notes),
             tags: tags,
             createdUtc: now,
-            updatedUtc: now);
+            updatedUtc: now,
+            attachments: attachments);
+    }
+
+    public void UpdateAttachments(IEnumerable<VaultAttachment>? attachments, DateTimeOffset? nowUtc = null)
+    {
+        var normalized = NormalizeAttachments(attachments);
+        _attachments.Clear();
+        _attachments.AddRange(normalized);
+        UpdatedUtc = nowUtc ?? DateTimeOffset.UtcNow;
     }
 
     public void Update(
@@ -91,7 +105,8 @@ public sealed class VaultEntry
         string? notes,
         IEnumerable<string>? tags,
         DateTimeOffset createdUtc,
-        DateTimeOffset updatedUtc)
+        DateTimeOffset updatedUtc,
+        IEnumerable<VaultAttachment>? attachments = null)
     {
         // Reuse the same minimal invariants
         return new VaultEntry(
@@ -103,7 +118,8 @@ public sealed class VaultEntry
             notes: NormalizeOptional(notes),
             tags: tags,
             createdUtc: createdUtc,
-            updatedUtc: updatedUtc);
+            updatedUtc: updatedUtc,
+            attachments: attachments);
     }
 
     private static string RequireNonEmpty(string value, string paramName)
@@ -132,5 +148,17 @@ public sealed class VaultEntry
             .Select(t => t.Trim())
             .Where(t => t.Length > 0)
             .ToList();
+    }
+
+    private static List<VaultAttachment> NormalizeAttachments(IEnumerable<VaultAttachment>? attachments)
+    {
+        var normalized = attachments?.ToList() ?? new List<VaultAttachment>();
+        if (normalized.Any(attachment => attachment is null))
+            throw new ArgumentException("Attachments cannot contain null values.", nameof(attachments));
+        if (normalized.Count > VaultAttachment.MaximumCountPerEntry)
+            throw new ArgumentException("An entry cannot contain more than five attachments.", nameof(attachments));
+        if (normalized.Select(attachment => attachment.Id).Distinct().Count() != normalized.Count)
+            throw new ArgumentException("Attachment identifiers must be unique.", nameof(attachments));
+        return normalized;
     }
 }

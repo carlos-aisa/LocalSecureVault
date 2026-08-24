@@ -29,10 +29,12 @@ Typical user flow (desktop + companion):
 
 - Vault creation and unlock with master password
 - Full entry CRUD (name, username, password, URL, notes, tags)
+- Encrypted embedded image and PDF attachments (up to five 5 MiB attachments per entry)
 - Fast search and filtering
 - Clipboard copy with auto-clear policy
 - Auto-lock after inactivity
 - Manual transfer workflow to companion Android app
+- Android companion provides read-only entry access, including attachment viewing
 - Markdown import support
 
 ## Security Model

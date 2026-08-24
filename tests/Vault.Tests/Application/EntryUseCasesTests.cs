@@ -273,4 +273,24 @@ public class EntryUseCasesTests
         Assert.False(result.IsSuccess);
         Assert.Single(doc.Entries);
     }
+
+    [Fact]
+    public void AttachmentCrud_UpdatesTheEntry()
+    {
+        var document = VaultDocument.CreateNew("Vault");
+        var entry = VaultEntry.CreateNew("GitHub", "pw");
+        var useCases = new EntryUseCases();
+        useCases.Add(document, entry);
+        var first = VaultAttachment.CreateNew("first.pdf", "application/pdf", new byte[] { 1 });
+        var replacement = VaultAttachment.CreateNew("second.pdf", "application/pdf", new byte[] { 2 });
+
+        var addResult = useCases.AddAttachment(document, entry.Id, first);
+        var replaceResult = useCases.ReplaceAttachment(document, entry.Id, first.Id, replacement);
+        var deleteResult = useCases.DeleteAttachment(document, entry.Id, replacement.Id);
+
+        Assert.True(addResult.IsSuccess);
+        Assert.True(replaceResult.IsSuccess);
+        Assert.True(deleteResult.IsSuccess);
+        Assert.Empty(entry.Attachments);
+    }
 }

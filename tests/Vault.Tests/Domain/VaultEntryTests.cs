@@ -72,4 +72,50 @@ public class VaultEntryTests
         Assert.Equal(t1, entry.CreatedUtc);
         Assert.Equal(t2, entry.UpdatedUtc);
     }
+
+    [Fact]
+    public void UpdateAttachments_ReplacesAttachmentsAndUpdatesTimestamp()
+    {
+        var created = new DateTimeOffset(2025, 12, 14, 0, 0, 0, TimeSpan.Zero);
+        var updated = created.AddMinutes(1);
+        var entry = VaultEntry.CreateNew("A", "P", nowUtc: created);
+        var attachment = VaultAttachment.CreateNew("receipt.pdf", "application/pdf", new byte[] { 1 }, created);
+
+        entry.UpdateAttachments(new[] { attachment }, updated);
+
+        Assert.Single(entry.Attachments);
+        Assert.Equal(attachment.Id, entry.Attachments[0].Id);
+        Assert.Equal(updated, entry.UpdatedUtc);
+    }
+
+    [Fact]
+    public void CreateNew_RejectsMoreThanFiveAttachments()
+    {
+        var attachments = Enumerable.Range(0, VaultAttachment.MaximumCountPerEntry + 1)
+            .Select(index => VaultAttachment.CreateNew($"{index}.pdf", "application/pdf", new byte[] { 1 }))
+            .ToList();
+
+        Assert.Throws<ArgumentException>(() => VaultEntry.CreateNew("A", "P", attachments: attachments));
+    }
+
+    [Fact]
+    public void Attachment_RejectsUnsupportedMediaType()
+    {
+        Assert.Throws<ArgumentException>(() => VaultAttachment.CreateNew("text.txt", "text/plain", new byte[] { 1 }));
+    }
+
+    [Fact]
+    public void UpdateAttachments_WithInvalidValue_PreservesExistingAttachments()
+    {
+        var attachment = VaultAttachment.CreateNew("receipt.pdf", "application/pdf", new byte[] { 1 });
+        var entry = VaultEntry.CreateNew("A", "P", attachments: new[] { attachment });
+        var tooMany = Enumerable.Range(0, VaultAttachment.MaximumCountPerEntry + 1)
+            .Select(index => VaultAttachment.CreateNew($"{index}.pdf", "application/pdf", new byte[] { 1 }))
+            .ToList();
+
+        Assert.Throws<ArgumentException>(() => entry.UpdateAttachments(tooMany));
+
+        Assert.Single(entry.Attachments);
+        Assert.Equal(attachment.Id, entry.Attachments[0].Id);
+    }
 }

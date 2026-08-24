@@ -134,6 +134,7 @@ JSON format (MVP):
   - URL
   - Notes
   - Tags
+  - Embedded attachments (JPEG, PNG, GIF, WebP, and PDF; up to five per entry and 5 MiB each)
 
 ---
 
@@ -207,6 +208,7 @@ JSON format (MVP):
 
 - [x] Create Android file picker for vault selection
 - [x] Unlock with password + biometric auth
+- [x] Read-only entry and attachment viewing
 
 ---
 

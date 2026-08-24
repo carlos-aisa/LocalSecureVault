@@ -1,6 +1,7 @@
 using Vault.Application.Models;
 using Vault.Application.UseCases;
 using Vault.Storage.Serialization;
+using Vault.Domain;
 using Xunit;
 
 namespace Vault.Tests;
@@ -38,5 +39,22 @@ public class VaultDocumentSerializationTests
         Assert.Equal(e2.Id, doc2.Entries[1].Id);
         Assert.Equal("Bank", doc2.Entries[1].Name);
         Assert.Equal("pw2", doc2.Entries[1].Password);
+    }
+
+    [Fact]
+    public void SerializeDeserialize_Roundtrip_PreservesAttachments()
+    {
+        var attachment = VaultAttachment.CreateNew("scan.png", "image/png", new byte[] { 1, 2, 3 });
+        var entry = VaultEntry.CreateNew("Receipt", "pw", attachments: new[] { attachment });
+        var document = VaultDocument.CreateNew("Personal");
+        document.AddEntry(entry);
+
+        var deserialized = new VaultDocumentSerializer().DeserializeFromUtf8(new VaultDocumentSerializer().SerializeToUtf8(document));
+
+        var result = Assert.Single(deserialized.Entries[0].Attachments);
+        Assert.Equal(attachment.Id, result.Id);
+        Assert.Equal("scan.png", result.FileName);
+        Assert.Equal("image/png", result.MediaType);
+        Assert.Equal(new byte[] { 1, 2, 3 }, result.Content.ToArray());
     }
 }

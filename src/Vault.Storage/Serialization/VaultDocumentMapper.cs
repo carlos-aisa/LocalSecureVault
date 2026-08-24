@@ -31,6 +31,14 @@ internal static class VaultDocumentMapper
         Url = e.Url,
         Notes = e.Notes,
         Tags = e.Tags.ToList(),
+        Attachments = e.Attachments.Select(attachment => new VaultAttachmentDto
+        {
+            Id = attachment.Id,
+            FileName = attachment.FileName,
+            MediaType = attachment.MediaType,
+            Content = attachment.Content.ToArray(),
+            CreatedUtc = attachment.CreatedUtc
+        }).ToList(),
         CreatedUtc = e.CreatedUtc,
         UpdatedUtc = e.UpdatedUtc
     };
@@ -65,6 +73,12 @@ internal static class VaultDocumentMapper
             notes: e.Notes,
             tags: e.Tags,
             createdUtc: e.CreatedUtc,
-            updatedUtc: e.UpdatedUtc);
+            updatedUtc: e.UpdatedUtc,
+            attachments: (e.Attachments ?? new List<VaultAttachmentDto>()).Select(attachment => VaultAttachment.Rehydrate(
+                attachment.Id,
+                attachment.FileName,
+                attachment.MediaType,
+                attachment.Content,
+                attachment.CreatedUtc)));
     }
 }
