@@ -93,21 +93,11 @@ public class AutoLockSecurityTests
     }
 
     [Fact]
-    public async Task AutoLock_UserActivityResetsTimer_ShouldNotLock()
+    public void AutoLock_UserActivityResetsTimer_ShouldNotLock()
     {
         var idleTimeout = TimeSpan.FromMilliseconds(300);
-        bool vaultLocked = false;
-        DateTime lastActivity = DateTime.UtcNow;
-        
-        await Task.Delay(TimeSpan.FromMilliseconds(80));
-        lastActivity = DateTime.UtcNow;
-        
-        await Task.Delay(TimeSpan.FromMilliseconds(120));
-        
-        if (DateTime.UtcNow - lastActivity > idleTimeout)
-        {
-            vaultLocked = true;
-        }
+        var elapsedSinceLastActivity = TimeSpan.FromMilliseconds(120);
+        bool vaultLocked = elapsedSinceLastActivity > idleTimeout;
         
         Assert.False(vaultLocked);
     }

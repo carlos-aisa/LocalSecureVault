@@ -99,7 +99,15 @@
                         || State.IsUnlocked
                         || string.IsNullOrWhiteSpace(VaultPath)
                         || string.IsNullOrWhiteSpace(Password))">
-                Open vault
+                @if (IsBusy)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Opening vault…</span>
+                }
+                else
+                {
+                    <span>Open vault</span>
+                }
             </button>
 
             <button class="btn btn-secondary" @onclick="Cancel" disabled="@IsBusy">
@@ -108,6 +116,13 @@
         </div>
     </div>
 </div>
+
+@if (IsBusy)
+{
+    <div class="alert alert-info mt-3" role="status">
+        Decrypting and opening the vault. This may take a few seconds.
+    </div>
+}
 
 @if (!string.IsNullOrWhiteSpace(Error))
 {
@@ -162,7 +177,10 @@
         var picked = await Picker.PickVaultFileAsync();
 
         if (!string.IsNullOrWhiteSpace(picked))
+        {
             VaultPath = picked;
+            ShowBiometricButton = false;
+        }
     }
 
     private async Task OpenAsync()
@@ -179,7 +197,7 @@
                 Error = result.Error!.UserMessage;
 
                 // Only invalidates if the file does not exist or the path is invalid
-                if (result.Error.Code is VaultErrorCode.FileNotFound or VaultErrorCode.InvalidFormat)
+                if (result.Error.Code is VaultErrorCode.FileNotFound or VaultErrorCode.InvalidFormat or VaultErrorCode.AccessDenied)
                     Recent.Clear();
 
                 return;

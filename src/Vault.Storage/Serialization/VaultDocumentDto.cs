@@ -23,6 +23,16 @@ internal sealed class VaultEntryDto
     public string? Url { get; set; }
     public string? Notes { get; set; }
     public List<string> Tags { get; set; } = new();
+    public List<VaultAttachmentDto> Attachments { get; set; } = new();
     public DateTimeOffset CreatedUtc { get; set; }
     public DateTimeOffset UpdatedUtc { get; set; }
+}
+
+internal sealed class VaultAttachmentDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = "";
+    public string MediaType { get; set; } = "";
+    public byte[] Content { get; set; } = Array.Empty<byte>();
+    public DateTimeOffset CreatedUtc { get; set; }
 }

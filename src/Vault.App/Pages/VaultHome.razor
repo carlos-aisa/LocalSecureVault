@@ -11,13 +11,16 @@
 @inject ClipboardService Clipboard
 
 @* HEADER - Title and global actions *@
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h3 class="mb-0">Vault</h3>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 @(IsReadOnlyCompanion ? "companion-vault-header" : "")">
+    <div><div class="companion-overline">@(IsReadOnlyCompanion ? "Your secure space" : "")</div><h3 class="mb-0">@(IsReadOnlyCompanion ? State.UnlockedDocument?.Meta.VaultName ?? "Vault" : "Vault")</h3></div>
     
     @if (State.UnlockedDocument is not null)
     {
         <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-success" @onclick="SaveAsync" disabled="@(!State.IsDirty || IsBusy)">Save</button>
+            @if (!IsReadOnlyCompanion)
+            {
+                <button class="btn btn-success" @onclick="SaveAsync" disabled="@(!State.IsDirty || IsBusy)">Save</button>
+            }
             @if (ShowExportButton)
             {
                 <button class="btn btn-outline-primary" @onclick="ExportAsync" disabled="@IsBusy">Export</button>
@@ -47,9 +50,12 @@
             <input class="form-control vault-search-input" placeholder="Search entries..."
                    @bind="Search" @bind:event="oninput" />
             
-            <div class="d-flex gap-2 vault-toolbar-actions ms-lg-auto justify-content-end">
-                <button class="btn btn-primary vault-add-entry-btn" @onclick="NewEntry">Add Entry</button>
-            </div>
+            @if (!IsReadOnlyCompanion)
+            {
+                <div class="d-flex gap-2 vault-toolbar-actions ms-lg-auto justify-content-end">
+                    <button class="btn btn-primary vault-add-entry-btn" @onclick="NewEntry">Add Entry</button>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -69,7 +75,7 @@ else
     <div class="d-flex flex-column gap-2" style="max-width: 100%; overflow-x: hidden;">
         @foreach (var e in EntriesFiltered)
         {
-            <div class="card">
+            <div class="card @(IsReadOnlyCompanion ? "companion-entry-card" : "")">
                 <div class="card-body py-3" style="display: flex; flex-direction: column;">
                     @* First row: Name + Tags *@
                     <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap" style="flex-shrink: 0;">
@@ -85,6 +91,18 @@ else
                             </div>
                         }
                     </div>
+
+                    @if (IsReadOnlyCompanion && e.Attachments.Count > 0)
+                    {
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            @foreach (var attachment in e.Attachments)
+                            {
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewAttachment(attachment)">
+                                    View @attachment.FileName
+                                </button>
+                            }
+                        </div>
+                    }
                     
                     @* Username and Notes *@
                     <div style="flex: 1; min-width: 0; overflow-x: hidden;">
@@ -106,8 +124,15 @@ else
                         <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyPasswordAsync(e.Id)">
                             @(CopiedId == e.Id ? "Copied" : "Copy")
                         </button>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(e.Id)">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(e.Id)">Delete</button>
+                        @if (!IsReadOnlyCompanion)
+                        {
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(e.Id)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(e.Id)">Delete</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenEntryDetail(e)">View</button>
+                        }
                     </div>
                 </div>
             </div>
@@ -159,8 +184,57 @@ else
     </div>
 }
 
+@if (SelectedEntry is not null)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-label="Entry details">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content companion-detail-sheet">
+                <div class="modal-header"><h5 class="modal-title">@SelectedEntry.Name</h5><button type="button" class="btn-close" @onclick="CloseEntryDetail" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrWhiteSpace(SelectedEntry.Username)) { <div class="mb-3"><div class="companion-overline">Username</div><div>@SelectedEntry.Username</div></div> }
+                    <div class="mb-3"><div class="companion-overline">Password</div><button class="btn btn-primary w-100 mt-1" @onclick="() => CopyPasswordAsync(SelectedEntry.Id)">@(CopiedId == SelectedEntry.Id ? "Copied" : "Copy password")</button></div>
+                    @if (!string.IsNullOrWhiteSpace(SelectedEntry.Notes)) { <div class="mb-3"><div class="companion-overline">Notes</div><div>@SelectedEntry.Notes</div></div> }
+                    @if (SelectedEntry.Attachments.Count > 0) { <div class="companion-overline mb-2">Attachments</div>@foreach (var attachment in SelectedEntry.Attachments) { <button class="btn btn-outline-primary w-100 mb-2 text-start" @onclick="() => ViewAttachment(attachment)">View @attachment.FileName</button> } }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (PreviewAttachment is not null)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-label="Attachment preview">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-truncate">@PreviewAttachment.FileName</h5>
+                    <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center bg-light">
+                    @if (PreviewAttachment.IsImage)
+                    {
+                        <img src="@AttachmentSource(PreviewAttachment)" alt="@PreviewAttachment.FileName" class="img-fluid rounded" />
+                    }
+                    else
+                    {
+                        <object data="@AttachmentSource(PreviewAttachment)" type="application/pdf" width="100%" height="600">
+                            <div class="alert alert-warning mb-0">This device cannot preview this PDF.</div>
+                        </object>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="ClosePreview">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private bool ShowExportButton => OperatingSystem.IsAndroid();
+    private bool IsReadOnlyCompanion => OperatingSystem.IsAndroid();
 
     private string? Error;
     private string Search = "";
@@ -177,6 +251,8 @@ else
     private string? SaveMsg;
     private Guid? CopiedId;
     private CancellationTokenSource? _copyCts;
+    private Vault.Domain.VaultAttachment? PreviewAttachment;
+    private Vault.Domain.VaultEntry? SelectedEntry;
 
     private IReadOnlyList<Vault.Domain.VaultEntry> EntriesFiltered =>
         SearchService.Search(State.UnlockedDocument!, new SearchQuery(Search));
@@ -241,7 +317,8 @@ else
                     data.Username,
                     data.Url,
                     data.Notes,
-                    data.Tags);
+                    data.Tags,
+                    data.Attachments);
 
                 if (!res.IsSuccess) { Error = res.Error!.UserMessage; return; }
             }
@@ -396,4 +473,13 @@ else
         }
         catch (TaskCanceledException) { }
     }
+
+    private void ViewAttachment(Vault.Domain.VaultAttachment attachment) => PreviewAttachment = attachment;
+    private void OpenEntryDetail(Vault.Domain.VaultEntry entry) => SelectedEntry = entry;
+    private void CloseEntryDetail() => SelectedEntry = null;
+
+    private void ClosePreview() => PreviewAttachment = null;
+
+    private static string AttachmentSource(Vault.Domain.VaultAttachment attachment)
+        => $"data:{attachment.MediaType};base64,{Convert.ToBase64String(attachment.Content.Span)}";
 }

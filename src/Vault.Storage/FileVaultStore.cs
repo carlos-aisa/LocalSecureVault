@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 using Vault.Application.Abstractions;
 using System.Text;
 
-#if ANDROID
-using Android.Content;
-#endif
 
 namespace Vault.Storage;
 
@@ -17,14 +14,6 @@ public sealed class FileVaultStore : IVaultStore
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("Invalid path.", nameof(path));
-
-#if ANDROID
-        // On Android, check if this is a content:// URI
-        if (path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
-        {
-            return await ReadFromContentUriAsync(path, ct);
-        }
-#endif
 
         // Traditional file system path
         using var fs = new FileStream(
@@ -43,15 +32,6 @@ public sealed class FileVaultStore : IVaultStore
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("Invalid path.", nameof(path));
         ArgumentNullException.ThrowIfNull(file);
-
-#if ANDROID
-        // On Android, check if this is a content:// URI
-        if (path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
-        {
-            await WriteToContentUriAsync(path, file, ct);
-            return;
-        }
-#endif
 
         // Traditional file system path - atomic write with temp file
         var directory = Path.GetDirectoryName(path);
@@ -82,7 +62,7 @@ public sealed class FileVaultStore : IVaultStore
     // Stream-based operations (platform-agnostic)
     // -----------------------
 
-    private static async Task<VaultFile> ReadFromStreamAsync(Stream stream, CancellationToken ct)
+    public static async Task<VaultFile> ReadFromStreamAsync(Stream stream, CancellationToken ct)
     {
         if (stream.Length < VaultFormatConstants.HeaderSizeV1 + VaultFormatConstants.TagSize)
             throw new InvalidDataException("File too small to be a vault.");
@@ -109,7 +89,7 @@ public sealed class FileVaultStore : IVaultStore
         return new VaultFile(header, ciphertext, tag);
     }
 
-    private static async Task WriteToStreamAsync(Stream stream, VaultFile file, CancellationToken ct)
+    public static async Task WriteToStreamAsync(Stream stream, VaultFile file, CancellationToken ct)
     {
         var headerBytes = SerializeHeader(file.Header);
         await stream.WriteAsync(headerBytes, ct);
@@ -117,59 +97,6 @@ public sealed class FileVaultStore : IVaultStore
         await stream.WriteAsync(file.Tag, ct);
         await stream.FlushAsync(ct);
     }
-
-#if ANDROID
-    // -----------------------
-    // Android-specific content:// URI handling
-    // -----------------------
-
-    private static async Task<VaultFile> ReadFromContentUriAsync(string uriString, CancellationToken ct)
-    {
-        var context = Android.App.Application.Context;
-        var contentResolver = context.ContentResolver;
-        
-        if (contentResolver == null)
-            throw new InvalidOperationException("ContentResolver not available");
-
-        var uri = Android.Net.Uri.Parse(uriString);
-        if (uri == null)
-            throw new ArgumentException($"Invalid content URI: {uriString}");
-
-        using var inputStream = contentResolver.OpenInputStream(uri);
-        if (inputStream == null)
-            throw new IOException($"Could not open input stream for URI: {uriString}");
-
-        using var ms = new MemoryStream();
-        await inputStream.CopyToAsync(ms, ct);
-        ms.Position = 0;
-
-        return await ReadFromStreamAsync(ms, ct);
-    }
-
-    private static async Task WriteToContentUriAsync(string uriString, VaultFile file, CancellationToken ct)
-    {
-        var context = Android.App.Application.Context;
-        var contentResolver = context.ContentResolver;
-        
-        if (contentResolver == null)
-            throw new InvalidOperationException("ContentResolver not available");
-
-        var uri = Android.Net.Uri.Parse(uriString);
-        if (uri == null)
-            throw new ArgumentException($"Invalid content URI: {uriString}");
-
-        // Prefer "rwt" (read/write/truncate) for better compatibility when overwriting documents.
-        var outputStream = contentResolver.OpenOutputStream(uri, "rwt")
-                         ?? contentResolver.OpenOutputStream(uri, "wt");
-        if (outputStream == null)
-            throw new IOException($"Could not open output stream for URI: {uriString}");
-
-        await using (outputStream)
-        {
-            await WriteToStreamAsync(outputStream, file, ct);
-        }
-    }
-#endif
 
     // -----------------------
     // Helpers

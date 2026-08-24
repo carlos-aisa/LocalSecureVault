@@ -19,12 +19,13 @@ public sealed class EntryEditorModel
 
     // UI helper
     public string TagsText { get; set; } = "";
+    public List<VaultAttachment> Attachments { get; } = new();
 
     public static EntryEditorModel FromEntry(VaultEntry? e)
     {
         if (e is null) return new EntryEditorModel();
 
-        return new EntryEditorModel
+        var model = new EntryEditorModel
         {
             Name = e.Name,
             Username = e.Username,
@@ -33,6 +34,8 @@ public sealed class EntryEditorModel
             Notes = e.Notes,
             TagsText = string.Join(Environment.NewLine, e.Tags)
         };
+        model.Attachments.AddRange(e.Attachments);
+        return model;
     }
 
     public VaultEntry ToNewEntry(DateTimeOffset? nowUtc = null)
@@ -45,7 +48,8 @@ public sealed class EntryEditorModel
             url: Url?.Trim(),
             notes: Notes?.Trim(),
             tags: tags,
-            nowUtc: nowUtc);
+            nowUtc: nowUtc,
+            attachments: Attachments);
     }
 
     public EntryUpdateData ToUpdateData()
@@ -56,7 +60,8 @@ public sealed class EntryEditorModel
             Username?.Trim(),
             Url?.Trim(),
             Notes?.Trim(),
-            ParseTags());
+            ParseTags(),
+            Attachments);
     }
 
     private List<string> ParseTags()
@@ -75,5 +80,6 @@ public sealed class EntryEditorModel
         string? Username,
         string? Url,
         string? Notes,
-        IReadOnlyList<string> Tags);
+        IReadOnlyList<string> Tags,
+        IReadOnlyList<VaultAttachment> Attachments);
 }

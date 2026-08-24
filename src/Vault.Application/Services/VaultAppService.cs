@@ -36,7 +36,16 @@ public sealed class VaultAppService
 
             try
             {
-                var res = _crypto.UnlockVault(file, password.Span);
+                var passwordCopy = password.ToArray();
+                VaultUnlockResult res;
+                try
+                {
+                    res = await Task.Run(() => _crypto.UnlockVault(file, passwordCopy));
+                }
+                finally
+                {
+                    Array.Clear(passwordCopy);
+                }
 
                 return VaultResult<UnlockedVault>.Ok(
                     new UnlockedVault(path, res.Document, res.SessionKey, file.Header));
@@ -64,12 +73,20 @@ public sealed class VaultAppService
         {
             return VaultResult<UnlockedVault>.Fail(new(VaultErrorCode.AccessDenied, "Access denied to the vault file.", ex.Message));
         }
+        catch (Exception ex) when (string.Equals(ex.GetType().Name, "SecurityException", StringComparison.Ordinal))
+        {
+            return VaultResult<UnlockedVault>.Fail(new(
+                VaultErrorCode.AccessDenied,
+                "Access to the selected vault file has expired. Select it again.",
+                ex.Message));
+        }
         catch (IOException ex)
         {
             return VaultResult<UnlockedVault>.Fail(new(VaultErrorCode.IoError, "I/O error while reading the vault file.", ex.Message));
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine( $"Vault open failed: {ex.GetType().Name} — {ex.Message}");
             return VaultResult<UnlockedVault>.Fail(new(VaultErrorCode.Unknown, "Unexpected error while opening the vault.", ex.Message));
         }
         
@@ -158,6 +175,15 @@ public sealed class VaultAppService
     public VaultResult<Guid> AddEntry(VaultDocument doc, VaultEntry entry, DateTimeOffset? nowUtc = null)
     => _entries.Add(doc, entry, nowUtc);
 
+    public VaultResult<Guid> AddAttachment(VaultDocument doc, Guid entryId, VaultAttachment attachment, DateTimeOffset? nowUtc = null)
+        => _entries.AddAttachment(doc, entryId, attachment, nowUtc);
+
+    public VaultResult<Unit> ReplaceAttachment(VaultDocument doc, Guid entryId, Guid attachmentId, VaultAttachment replacement, DateTimeOffset? nowUtc = null)
+        => _entries.ReplaceAttachment(doc, entryId, attachmentId, replacement, nowUtc);
+
+    public VaultResult<Unit> DeleteAttachment(VaultDocument doc, Guid entryId, Guid attachmentId, DateTimeOffset? nowUtc = null)
+        => _entries.DeleteAttachment(doc, entryId, attachmentId, nowUtc);
+
     public VaultResult<Unit> UpdateEntry(
         VaultDocument doc,
         Guid id,
@@ -167,8 +193,9 @@ public sealed class VaultAppService
         string? url,
         string? notes,
         IReadOnlyList<string> tags,
+        IReadOnlyList<VaultAttachment>? attachments = null,
         DateTimeOffset? nowUtc = null)
-        => _entries.Update(doc, id, name, password, username, url, notes, tags, nowUtc);
+        => _entries.Update(doc, id, name, password, username, url, notes, tags, attachments, nowUtc);
         
         public VaultResult<Unit> DeleteEntry(VaultDocument doc, Guid id, DateTimeOffset? nowUtc = null)
             => _entries.Delete(doc, id, nowUtc);
