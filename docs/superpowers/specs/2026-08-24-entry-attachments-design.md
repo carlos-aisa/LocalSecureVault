@@ -53,7 +53,15 @@ empty collection, preserving backwards compatibility with existing vaults.
 
 ## User experience
 
-The entry editor shows an Attachments section:
+The entry editor shows an Attachments section integrated into the existing
+Bootstrap-based form. It reuses the application's established form controls,
+button hierarchy, spacing, badges, validation-message placement, neutral
+colours, and English UI copy. The section must feel like another field group in
+the current editor, rather than a separate document manager or a custom visual
+pattern. No new UI framework, bespoke visual language, or unrelated navigation
+is introduced.
+
+The section provides:
 
 - **Add** opens the platform file picker, accepts the supported types, then
   validates size and type before adding the attachment.
